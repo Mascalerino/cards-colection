@@ -51,4 +51,23 @@ export const routes: Routes = [
       },
     ],
   },
+  {
+    path: 'onepiece',
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/one-piece-collections/one-piece-collections.component').then(
+            (m) => m.OnePieceCollectionsComponent
+          ),
+      },
+      {
+        path: ':setId',
+        loadComponent: () =>
+          import('./pages/one-piece-collections/one-piece-set-detail/one-piece-set-detail.component').then(
+            (m) => m.OnePieceSetDetailComponent
+          ),
+      },
+    ],
+  },
 ];

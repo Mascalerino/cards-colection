@@ -20,6 +20,7 @@ export class CardCollectionComponent {
     'collection_', // Magic: The Gathering
     'naruto_collection_', // Naruto
     'pokemon_collection_', // Pokémon (para uso futuro)
+    'onepiece_collection_', // One Piece
   ];
 
   private readonly METADATA_PREFIXES = [
@@ -44,6 +45,10 @@ export class CardCollectionComponent {
 
   navigateToNaruto() {
     this.router.navigate(['/naruto']);
+  }
+
+  navigateToOnePiece() {
+    this.router.navigate(['/onepiece']);
   }
 
   exportCollections(): void {
