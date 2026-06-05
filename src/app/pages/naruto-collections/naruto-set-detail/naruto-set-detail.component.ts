@@ -238,6 +238,6 @@ export class NarutoSetDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/cartas/naruto']);
+    this.router.navigate(['/naruto']);
   }
 }

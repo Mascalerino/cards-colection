@@ -50,10 +50,10 @@ export class MagicCollectionsComponent implements OnInit {
   }
 
   onSetClick(set: CardSet): void {
-    this.router.navigate(['/cartas/magic', set.id]);
+    this.router.navigate(['/magic', set.id]);
   }
 
   goBack(): void {
-    this.router.navigate(['/cartas']);
+    this.router.navigate(['/']);
   }
 }

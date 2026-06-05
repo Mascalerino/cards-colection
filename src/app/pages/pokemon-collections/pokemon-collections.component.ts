@@ -39,6 +39,6 @@ export class PokemonCollectionsComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/cartas']);
+    this.router.navigate(['/']);
   }
 }

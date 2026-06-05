@@ -86,11 +86,11 @@ export class NarutoCollectionsComponent implements OnInit {
   }
 
   onSetClick(set: CardSet): void {
-    this.router.navigate(['/cartas/naruto', set.id]);
+    this.router.navigate(['/naruto', set.id]);
   }
 
   goBack(): void {
-    this.router.navigate(['/cartas']);
+    this.router.navigate(['/']);
   }
 
   generateCardCode(seriesId: string, rarityCode: string, number: number): string {

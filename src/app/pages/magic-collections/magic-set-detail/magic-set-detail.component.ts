@@ -241,7 +241,7 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
   }
 
   goBack(): void {
-    this.router.navigate(['/cartas/magic']);
+    this.router.navigate(['/magic']);
   }
 
   getCardCount(cardId: string, variant: CardVariant): number {
