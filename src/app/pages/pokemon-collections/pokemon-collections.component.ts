@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +11,7 @@ import { SetListComponent } from '@components/set-list/set-list.component';
   standalone: true,
   imports: [SetListComponent, MatButtonModule, MatIconModule],
   templateUrl: './pokemon-collections.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './pokemon-collections.component.scss',
 })
 export class PokemonCollectionsComponent implements OnInit {

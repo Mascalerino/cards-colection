@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { FormsModule } from '@angular/forms';
@@ -36,6 +36,7 @@ type FilterType = 'all' | 'inCollection' | 'notInCollection';
     CardCollectionCounterComponent
 ],
   templateUrl: './magic-set-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './magic-set-detail.component.scss',
 })
 export class MagicSetDetailComponent implements OnInit, OnDestroy {

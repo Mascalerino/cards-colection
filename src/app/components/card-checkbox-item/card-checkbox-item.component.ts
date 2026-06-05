@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [MatCheckboxModule, FormsModule],
   templateUrl: './card-checkbox-item.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-checkbox-item.component.scss',
 })
 export class CardCheckboxItemComponent {

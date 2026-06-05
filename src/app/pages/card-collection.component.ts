@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,6 +9,7 @@ import { NgOptimizedImage } from '@angular/common';
   standalone: true,
   imports: [MatButtonModule, MatIconModule, NgOptimizedImage],
   templateUrl: './card-collection.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-collection.component.scss',
 })
 export class CardCollectionComponent {

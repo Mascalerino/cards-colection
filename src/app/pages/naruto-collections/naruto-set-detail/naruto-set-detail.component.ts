@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { FormsModule } from '@angular/forms';
@@ -45,6 +45,7 @@ interface NarutoSeries {
     ProgressStatsComponent
 ],
   templateUrl: './naruto-set-detail.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './naruto-set-detail.component.scss',
 })
 export class NarutoSetDetailComponent implements OnInit {

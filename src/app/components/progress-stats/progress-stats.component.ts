@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
 
 @Component({
@@ -6,6 +6,7 @@ import { Component, Input } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './progress-stats.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './progress-stats.component.scss',
 })
 export class ProgressStatsComponent {

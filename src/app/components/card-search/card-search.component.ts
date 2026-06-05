@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -24,6 +24,7 @@ export interface FilterOption {
     MatCheckboxModule
 ],
   templateUrl: './card-search.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-search.component.scss',
 })
 export class CardSearchComponent {

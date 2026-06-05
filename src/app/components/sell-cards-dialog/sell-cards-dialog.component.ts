@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -33,6 +33,7 @@ export interface SellCardsDialogData {
     MatInputModule
 ],
   templateUrl: './sell-cards-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sell-cards-dialog.component.scss',
 })
 export class SellCardsDialogComponent implements OnInit {

@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
@@ -33,6 +33,7 @@ interface DisplayEntry extends CardEntry {
     MatTooltipModule
 ],
   templateUrl: './card-detail-panel.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-detail-panel.component.scss',
 })
 export class CardDetailPanelComponent implements OnInit {

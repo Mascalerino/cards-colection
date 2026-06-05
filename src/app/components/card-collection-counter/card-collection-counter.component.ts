@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { CardVariant } from '@models/card-entry.model';
   standalone: true,
   imports: [MatIconModule, MatButtonModule],
   templateUrl: './card-collection-counter.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-collection-counter.component.scss',
 })
 export class CardCollectionCounterComponent {

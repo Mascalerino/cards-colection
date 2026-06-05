@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -25,6 +25,7 @@ interface NarutoSeries {
   standalone: true,
   imports: [MatButtonModule, MatIconModule, SetListComponent],
   templateUrl: './naruto-collections.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './naruto-collections.component.scss',
 })
 export class NarutoCollectionsComponent implements OnInit {
