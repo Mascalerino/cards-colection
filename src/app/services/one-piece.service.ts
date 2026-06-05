@@ -19,10 +19,19 @@ export class OnePieceService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Obtiene todos los sets de One Piece desde JSON local
+   * Obtiene todos los sets de One Piece desde la API (con caché)
    */
   getAllSets(): Observable<OnePieceSet[]> {
-    return this.http.get<Array<{ set_name: string; set_id: string }>>('assets/card-collection/onepiece-sets.json').pipe(
+    // Intentar obtener del caché primero
+    const cached = this.getCachedData<OnePieceSet[]>('onepiece_all_sets');
+    if (cached) {
+      console.log('Lista de sets obtenida del caché');
+      return of(cached);
+    }
+
+    // Si no hay caché válido, obtener de la API
+    console.log('Obteniendo lista de sets desde la API');
+    return this.http.get<Array<{ set_name: string; set_id: string }>>(`${this.apiBaseUrl}/allSets/`).pipe(
       map((sets) =>
         sets.map((set) => ({
           set_id: set.set_id,
@@ -30,23 +39,34 @@ export class OnePieceService {
           ownedCards: 0,
           totalCards: 0,
         }))
-      )
+      ),
+      tap((sets) => this.setCachedData('onepiece_all_sets', sets))
     );
   }
 
   /**
-   * Obtiene todos los starter decks de One Piece desde JSON local
+   * Obtiene todos los starter decks de One Piece desde la API (con caché)
    */
   getAllDecks(): Observable<OnePieceDeck[]> {
-    return this.http.get<Array<{ structure_deck_name: string; structure_deck_id: string }>>('assets/card-collection/onepiece-decks.json').pipe(
+    // Intentar obtener del caché primero
+    const cached = this.getCachedData<OnePieceDeck[]>('onepiece_all_decks');
+    if (cached) {
+      console.log('Lista de decks obtenida del caché');
+      return of(cached);
+    }
+
+    // Si no hay caché válido, obtener de la API
+    console.log('Obteniendo lista de decks desde la API');
+    return this.http.get<Array<{ deck_name: string; deck_id: string }>>(`${this.apiBaseUrl}/allDecks/`).pipe(
       map((decks) =>
         decks.map((deck) => ({
-          deck_id: deck.structure_deck_id,
-          deck_name: deck.structure_deck_name,
+          deck_id: deck.deck_id,
+          deck_name: deck.deck_name,
           ownedCards: 0,
           totalCards: 0,
         }))
-      )
+      ),
+      tap((decks) => this.setCachedData('onepiece_all_decks', decks))
     );
   }
 
@@ -152,11 +172,14 @@ export class OnePieceService {
   clearCache(): void {
     const keys = Object.keys(localStorage);
     keys.forEach((key) => {
-      if (key.startsWith('onepiece_cards_') || key.startsWith('onepiece_deck_cards_')) {
+      if (key.startsWith('onepiece_cards_') || 
+          key.startsWith('onepiece_deck_cards_') ||
+          key === 'onepiece_all_sets' ||
+          key === 'onepiece_all_decks') {
         localStorage.removeItem(key);
       }
     });
-    console.log('Caché de cartas de One Piece limpiado');
+    console.log('Caché de One Piece limpiado completamente');
   }
 
   /**
