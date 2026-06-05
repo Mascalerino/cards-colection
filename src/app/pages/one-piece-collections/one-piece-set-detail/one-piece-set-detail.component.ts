@@ -31,11 +31,6 @@ export class OnePieceSetDetailComponent implements OnInit {
   searchText: string = '';
   collectionTotalValue: number = 0;
 
-  // Arrays únicos para filtros
-  rarities: string[] = [];
-  colors: string[] = [];
-  types: string[] = [];
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -61,16 +56,10 @@ export class OnePieceSetDetailComponent implements OnInit {
         this.filteredCards = cards;
         this.setName = cards[0]?.set_name || 'One Piece';
 
-        // Extraer valores únicos para filtros
-        this.rarities = [...new Set(cards.map((c) => c.rarity))].sort();
-        this.colors = [...new Set(cards.map((c) => c.card_color))].sort();
-        this.types = [...new Set(cards.map((c) => c.card_type))].sort();
-
         // Cargar colección desde localStorage
         this.collection = this.onePieceService.loadCollection(this.setId);
         
-        this.loading = false;
-      },calculateCollectionValue();
+        this.calculateCollectionValue();
         this.applyFilters();
         this.loading = false;
       },
@@ -106,15 +95,11 @@ export class OnePieceSetDetailComponent implements OnInit {
       const quantity = this.getCardQuantity(card.card_set_id);
       const inCollection = quantity > 0;
 
-    this.calculateCollectionValue();
-    this.applyFilters();
-  }
+      // Filtro de colección
+      if (this.currentFilter === 'inCollection' && !inCollection) return false;
+      if (this.currentFilter === 'notInCollection' && inCollection) return false;
 
-  removeCard(card: OnePieceCard): void {
-    this.onePieceService.removeCard(this.setId, card.card_set_id);
-    this.collection = this.onePieceService.loadCollection(this.setId);
-    this.calculateCollectionValue();
-    this.applyFilters(
+      // Filtro de búsqueda
       const matchesSearch = !this.searchText || 
         card.card_name.toLowerCase().includes(this.searchText.toLowerCase()) ||
         card.card_set_id.toLowerCase().includes(this.searchText.toLowerCase());
@@ -132,11 +117,6 @@ export class OnePieceSetDetailComponent implements OnInit {
     }
   }
 
-  clearFilters(): void {
-    this.currentFilter = 'all'
-    this.applyFilters();
-  }
-
   getCardQuantity(cardId: string): number {
     return this.collection.get(cardId)?.quantity || 0;
   }
@@ -144,11 +124,15 @@ export class OnePieceSetDetailComponent implements OnInit {
   addCard(card: OnePieceCard): void {
     this.onePieceService.addCard(this.setId, card.card_set_id);
     this.collection = this.onePieceService.loadCollection(this.setId);
+    this.calculateCollectionValue();
+    this.applyFilters();
   }
 
   removeCard(card: OnePieceCard): void {
     this.onePieceService.removeCard(this.setId, card.card_set_id);
     this.collection = this.onePieceService.loadCollection(this.setId);
+    this.calculateCollectionValue();
+    this.applyFilters();
   }
 
   getTotalOwned(): number {
