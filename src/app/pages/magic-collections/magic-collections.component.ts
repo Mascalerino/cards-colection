@@ -58,10 +58,14 @@ export class MagicCollectionsComponent implements OnInit {
     const collectionKey = `collection_${setId}`;
     const collectionData = localStorage.getItem(collectionKey);
     
-    if (!collectionData) return;
+    if (!collectionData) {
+      console.log(`No hay colección para el set ${setId}`);
+      return;
+    }
 
     try {
       const collection = JSON.parse(collectionData);
+      console.log(`Calculando valor para set ${setId}, colección:`, collection);
       
       this.cardCollectionService.getMagicSetCards(setId).subscribe({
         next: (response) => {
@@ -97,7 +101,12 @@ export class MagicCollectionsComponent implements OnInit {
             }
           });
 
+          console.log(`Valor calculado para set ${setId}: ${setTotal}€`);
           this.totalCollectionValue += setTotal;
+          console.log(`Valor total acumulado: ${this.totalCollectionValue}€`);
+        },
+        error: (error) => {
+          console.error(`Error al obtener cartas del set ${setId}:`, error);
         }
       });
     } catch (error) {

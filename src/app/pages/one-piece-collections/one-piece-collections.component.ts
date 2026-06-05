@@ -30,6 +30,7 @@ export class OnePieceCollectionsComponent implements OnInit {
     // Cargar sets
     this.onePieceService.getAllSets().subscribe({
       next: (sets) => {
+        console.log('Sets de One Piece cargados:', sets);
         this.sets = sets;
         
         // Cargar el total de cartas y las cartas en colección para cada set
@@ -53,6 +54,7 @@ export class OnePieceCollectionsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al cargar sets de One Piece:', error);
+        console.error('Detalles del error:', error.message, error.status);
       },
     });
 
