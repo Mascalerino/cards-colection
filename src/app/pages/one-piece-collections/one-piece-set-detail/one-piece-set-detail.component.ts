@@ -8,11 +8,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { OnePieceService } from '../../../services/one-piece.service';
 import { OnePieceCard, OnePieceCardEntry } from '@models/one-piece-card.model';
 import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
+import { CardSearchComponent } from '@components/card-search/card-search.component';
 
 @Component({
   selector: 'app-one-piece-set-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatChipsModule, ProgressStatsComponent],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatChipsModule, ProgressStatsComponent, CardSearchComponent],
   templateUrl: './one-piece-set-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './one-piece-set-detail.component.scss',
@@ -26,10 +27,9 @@ export class OnePieceSetDetailComponent implements OnInit {
   loading = true;
 
   // Filtros
-  selectedRarity: string | null = null;
-  selectedColor: string | null = null;
-  selectedType: string | null = null;
+  currentFilter: string = 'all';
   searchText: string = '';
+  collectionTotalValue: number = 0;
 
   // Arrays únicos para filtros
   rarities: string[] = [];
@@ -70,6 +70,9 @@ export class OnePieceSetDetailComponent implements OnInit {
         this.collection = this.onePieceService.loadCollection(this.setId);
         
         this.loading = false;
+      },calculateCollectionValue();
+        this.applyFilters();
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error al cargar las cartas:', error);
@@ -78,24 +81,59 @@ export class OnePieceSetDetailComponent implements OnInit {
     });
   }
 
+  calculateCollectionValue(): void {
+    this.collectionTotalValue = 0;
+    this.collection.forEach((entry) => {
+      const card = this.cards.find((c) => c.card_set_id === entry.cardId);
+      if (card && card.market_price) {
+        this.collectionTotalValue += card.market_price * entry.quantity;
+      }
+    });
+  }
+
+  onSearchChange(searchText: string): void {
+    this.searchText = searchText;
+    this.applyFilters();
+  }
+
+  onFilterChange(filter: string): void {
+    this.currentFilter = filter;
+    this.applyFilters();
+  }
+
   applyFilters(): void {
     this.filteredCards = this.cards.filter((card) => {
-      const matchesRarity = !this.selectedRarity || card.rarity === this.selectedRarity;
-      const matchesColor = !this.selectedColor || card.card_color === this.selectedColor;
-      const matchesType = !this.selectedType || card.card_type === this.selectedType;
+      const quantity = this.getCardQuantity(card.card_set_id);
+      const inCollection = quantity > 0;
+
+    this.calculateCollectionValue();
+    this.applyFilters();
+  }
+
+  removeCard(card: OnePieceCard): void {
+    this.onePieceService.removeCard(this.setId, card.card_set_id);
+    this.collection = this.onePieceService.loadCollection(this.setId);
+    this.calculateCollectionValue();
+    this.applyFilters(
       const matchesSearch = !this.searchText || 
         card.card_name.toLowerCase().includes(this.searchText.toLowerCase()) ||
         card.card_set_id.toLowerCase().includes(this.searchText.toLowerCase());
 
-      return matchesRarity && matchesColor && matchesType && matchesSearch;
+      return matchesSearch;
     });
   }
 
+  deleteCollection(): void {
+    if (confirm('¿Estás seguro de que quieres eliminar toda la colección de este set?')) {
+      this.onePieceService.clearCollection(this.setId);
+      this.collection = new Map();
+      this.calculateCollectionValue();
+      this.applyFilters();
+    }
+  }
+
   clearFilters(): void {
-    this.selectedRarity = null;
-    this.selectedColor = null;
-    this.selectedType = null;
-    this.searchText = '';
+    this.currentFilter = 'all'
     this.applyFilters();
   }
 
