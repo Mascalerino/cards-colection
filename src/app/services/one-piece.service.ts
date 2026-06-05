@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { OnePieceCard, OnePieceSet, OnePieceDeck, OnePieceCardEntry } from '@models/one-piece-card.model';
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class OnePieceService {
   private readonly apiBaseUrl = '/api';
+  private readonly CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 días en milisegundos
 
   constructor(private http: HttpClient) {}
 
@@ -45,9 +51,18 @@ export class OnePieceService {
   }
 
   /**
-   * Obtiene todas las cartas de un set específico
+   * Obtiene todas las cartas de un set específico (con caché)
    */
   getSetCards(setId: string): Observable<OnePieceCard[]> {
+    // Intentar obtener del caché primero
+    const cached = this.getCachedData<OnePieceCard[]>(`onepiece_cards_${setId}`);
+    if (cached) {
+      console.log(`Cartas del set ${setId} obtenidas del caché`);
+      return of(cached);
+    }
+
+    // Si no hay caché válido, obtener de la API
+    console.log(`Obteniendo cartas del set ${setId} desde la API`);
     return this.http
       .get<OnePieceCard[]>(`${this.apiBaseUrl}/sets/filtered/?set_id=${setId}`)
       .pipe(
@@ -58,14 +73,24 @@ export class OnePieceService {
               sensitivity: 'base',
             })
           )
-        )
+        ),
+        tap((cards) => this.setCachedData(`onepiece_cards_${setId}`, cards))
       );
   }
 
   /**
-   * Obtiene todas las cartas de un deck específico
+   * Obtiene todas las cartas de un deck específico (con caché)
    */
   getDeckCards(deckId: string): Observable<OnePieceCard[]> {
+    // Intentar obtener del caché primero
+    const cached = this.getCachedData<OnePieceCard[]>(`onepiece_deck_cards_${deckId}`);
+    if (cached) {
+      console.log(`Cartas del deck ${deckId} obtenidas del caché`);
+      return of(cached);
+    }
+
+    // Si no hay caché válido, obtener de la API
+    console.log(`Obteniendo cartas del deck ${deckId} desde la API`);
     return this.http
       .get<OnePieceCard[]>(`${this.apiBaseUrl}/decks/filtered/?deck_id=${deckId}`)
       .pipe(
@@ -76,8 +101,62 @@ export class OnePieceService {
               sensitivity: 'base',
             })
           )
-        )
+        ),
+        tap((cards) => this.setCachedData(`onepiece_deck_cards_${deckId}`, cards))
       );
+  }
+
+  /**
+   * Obtiene datos del caché si son válidos (no han expirado)
+   */
+  private getCachedData<T>(key: string): T | null {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+
+    try {
+      const entry: CacheEntry<T> = JSON.parse(cached);
+      const now = Date.now();
+      
+      // Verificar si el caché ha expirado
+      if (now - entry.timestamp > this.CACHE_DURATION) {
+        localStorage.removeItem(key);
+        return null;
+      }
+
+      return entry.data;
+    } catch (error) {
+      console.error('Error al leer el caché:', error);
+      localStorage.removeItem(key);
+      return null;
+    }
+  }
+
+  /**
+   * Guarda datos en el caché con timestamp
+   */
+  private setCachedData<T>(key: string, data: T): void {
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: Date.now(),
+    };
+    try {
+      localStorage.setItem(key, JSON.stringify(entry));
+    } catch (error) {
+      console.error('Error al guardar en caché:', error);
+    }
+  }
+
+  /**
+   * Limpia todo el caché de cartas (útil para forzar actualización)
+   */
+  clearCache(): void {
+    const keys = Object.keys(localStorage);
+    keys.forEach((key) => {
+      if (key.startsWith('onepiece_cards_') || key.startsWith('onepiece_deck_cards_')) {
+        localStorage.removeItem(key);
+      }
+    });
+    console.log('Caché de cartas de One Piece limpiado');
   }
 
   /**
