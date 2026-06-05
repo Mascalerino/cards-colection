@@ -31,6 +31,15 @@ export class OnePieceSetDetailComponent implements OnInit {
   searchText: string = '';
   collectionTotalValue: number = 0;
 
+  // Filtros avanzados
+  showAdvancedFilters: boolean = false;
+  rarities: string[] = [];
+  colors: string[] = [];
+  types: string[] = [];
+  selectedRarity: string | null = null;
+  selectedColor: string | null = null;
+  selectedType: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -55,6 +64,11 @@ export class OnePieceSetDetailComponent implements OnInit {
         this.cards = cards;
         this.filteredCards = cards;
         this.setName = cards[0]?.set_name || 'One Piece';
+
+        // Extraer valores únicos para filtros avanzados
+        this.rarities = [...new Set(cards.map((c) => c.rarity))].sort();
+        this.colors = [...new Set(cards.map((c) => c.card_color))].sort();
+        this.types = [...new Set(cards.map((c) => c.card_type))].sort();
 
         // Cargar colección desde localStorage
         this.collection = this.onePieceService.loadCollection(this.setId);
@@ -104,8 +118,24 @@ export class OnePieceSetDetailComponent implements OnInit {
         card.card_name.toLowerCase().includes(this.searchText.toLowerCase()) ||
         card.card_set_id.toLowerCase().includes(this.searchText.toLowerCase());
 
-      return matchesSearch;
+      // Filtros avanzados
+      const matchesRarity = !this.selectedRarity || card.rarity === this.selectedRarity;
+      const matchesColor = !this.selectedColor || card.card_color === this.selectedColor;
+      const matchesType = !this.selectedType || card.card_type === this.selectedType;
+
+      return matchesSearch && matchesRarity && matchesColor && matchesType;
     });
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  clearAdvancedFilters(): void {
+    this.selectedRarity = null;
+    this.selectedColor = null;
+    this.selectedType = null;
+    this.applyFilters();
   }
 
   deleteCollection(): void {

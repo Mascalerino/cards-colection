@@ -40,6 +40,77 @@
         (filterChange)="onFilterChange($event)"
         >
       </app-card-search>
+
+      <div class="advanced-filters-toggle">
+        <button mat-stroked-button (click)="toggleAdvancedFilters()">
+          <mat-icon>{{ showAdvancedFilters ? 'expand_less' : 'expand_more' }}</mat-icon>
+          Búsqueda avanzada
+        </button>
+      </div>
+
+      @if (showAdvancedFilters) {
+        <div class="advanced-filters">
+          <div class="filter-group">
+            <label>Rareza:</label>
+            <mat-chip-set>
+              <mat-chip
+                [class.selected]="!selectedRarity"
+                (click)="selectedRarity = null; applyFilters()">
+                Todas
+              </mat-chip>
+              @for (rarity of rarities; track rarity) {
+                <mat-chip
+                  [class.selected]="selectedRarity === rarity"
+                  (click)="selectedRarity = rarity; applyFilters()">
+                  {{ rarity }}
+                </mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+
+          <div class="filter-group">
+            <label>Color:</label>
+            <mat-chip-set>
+              <mat-chip
+                [class.selected]="!selectedColor"
+                (click)="selectedColor = null; applyFilters()">
+                Todos
+              </mat-chip>
+              @for (color of colors; track color) {
+                <mat-chip
+                  [class.selected]="selectedColor === color"
+                  (click)="selectedColor = color; applyFilters()">
+                  {{ color }}
+                </mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+
+          <div class="filter-group">
+            <label>Tipo:</label>
+            <mat-chip-set>
+              <mat-chip
+                [class.selected]="!selectedType"
+                (click)="selectedType = null; applyFilters()">
+                Todos
+              </mat-chip>
+              @for (type of types; track type) {
+                <mat-chip
+                  [class.selected]="selectedType === type"
+                  (click)="selectedType = type; applyFilters()">
+                  {{ type }}
+                </mat-chip>
+              }
+            </mat-chip-set>
+          </div>
+
+          <div class="filter-actions">
+            <button mat-raised-button color="warn" (click)="clearAdvancedFilters()">
+              Limpiar filtros avanzados
+            </button>
+          </div>
+        </div>
+      }
     </div>
 
     <div class="cards-grid">
