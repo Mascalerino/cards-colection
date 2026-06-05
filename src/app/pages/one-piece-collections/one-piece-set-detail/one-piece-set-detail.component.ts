@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { OnePieceService } from '../../../services/one-piece.service';
 import { OnePieceCard, OnePieceCardEntry } from '@models/one-piece-card.model';
 import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
@@ -13,7 +12,7 @@ import { CardSearchComponent } from '@components/card-search/card-search.compone
 @Component({
   selector: 'app-one-piece-set-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatChipsModule, ProgressStatsComponent, CardSearchComponent],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, ProgressStatsComponent, CardSearchComponent],
   templateUrl: './one-piece-set-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './one-piece-set-detail.component.scss',

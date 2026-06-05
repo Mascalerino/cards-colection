@@ -43,37 +43,28 @@
 
       <div class="sort-section">
         <label>Ordenar por:</label>
-        <mat-chip-set>
-          <mat-chip
-            [class.selected]="sortOrder === 'none'"
-            (click)="onSortChange('none')">
-            Sin orden
-          </mat-chip>
-          <mat-chip
-            [class.selected]="sortOrder === 'cardNumberAsc'"
-            (click)="onSortChange('cardNumberAsc')">
-            <mat-icon>arrow_upward</mat-icon>
-            N° Carta
-          </mat-chip>
-          <mat-chip
-            [class.selected]="sortOrder === 'cardNumberDesc'"
-            (click)="onSortChange('cardNumberDesc')">
-            <mat-icon>arrow_downward</mat-icon>
-            N° Carta
-          </mat-chip>
-          <mat-chip
-            [class.selected]="sortOrder === 'priceAsc'"
-            (click)="onSortChange('priceAsc')">
-            <mat-icon>arrow_upward</mat-icon>
-            Precio
-          </mat-chip>
-          <mat-chip
-            [class.selected]="sortOrder === 'priceDesc'"
-            (click)="onSortChange('priceDesc')">
-            <mat-icon>arrow_downward</mat-icon>
-            Precio
-          </mat-chip>
-        </mat-chip-set>
+        <div class="radio-group">
+          <label class="radio-option">
+            <input type="radio" name="sort" [value]="'none'" [(ngModel)]="sortOrder" (change)="onSortChange(sortOrder)" />
+            <span>Sin orden</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="sort" [value]="'cardNumberAsc'" [(ngModel)]="sortOrder" (change)="onSortChange(sortOrder)" />
+            <span><mat-icon>arrow_upward</mat-icon> N° Carta</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="sort" [value]="'cardNumberDesc'" [(ngModel)]="sortOrder" (change)="onSortChange(sortOrder)" />
+            <span><mat-icon>arrow_downward</mat-icon> N° Carta</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="sort" [value]="'priceAsc'" [(ngModel)]="sortOrder" (change)="onSortChange(sortOrder)" />
+            <span><mat-icon>arrow_upward</mat-icon> Precio</span>
+          </label>
+          <label class="radio-option">
+            <input type="radio" name="sort" [value]="'priceDesc'" [(ngModel)]="sortOrder" (change)="onSortChange(sortOrder)" />
+            <span><mat-icon>arrow_downward</mat-icon> Precio</span>
+          </label>
+        </div>
       </div>
 
       <div class="advanced-filters-toggle">
@@ -87,56 +78,50 @@
         <div class="advanced-filters">
           <div class="filter-group">
             <label>Rareza:</label>
-            <mat-chip-set>
-              <mat-chip
-                [class.selected]="!selectedRarity"
-                (click)="selectedRarity = null; applyFilters()">
-                Todas
-              </mat-chip>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="rarity" [value]="null" [(ngModel)]="selectedRarity" (change)="applyFilters()" />
+                <span>Todas</span>
+              </label>
               @for (rarity of rarities; track rarity) {
-                <mat-chip
-                  [class.selected]="selectedRarity === rarity"
-                  (click)="selectedRarity = rarity; applyFilters()">
-                  {{ rarity }}
-                </mat-chip>
+                <label class="radio-option">
+                  <input type="radio" name="rarity" [value]="rarity" [(ngModel)]="selectedRarity" (change)="applyFilters()" />
+                  <span>{{ rarity }}</span>
+                </label>
               }
-            </mat-chip-set>
+            </div>
           </div>
 
           <div class="filter-group">
             <label>Color:</label>
-            <mat-chip-set>
-              <mat-chip
-                [class.selected]="!selectedColor"
-                (click)="selectedColor = null; applyFilters()">
-                Todos
-              </mat-chip>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="color" [value]="null" [(ngModel)]="selectedColor" (change)="applyFilters()" />
+                <span>Todos</span>
+              </label>
               @for (color of colors; track color) {
-                <mat-chip
-                  [class.selected]="selectedColor === color"
-                  (click)="selectedColor = color; applyFilters()">
-                  {{ color }}
-                </mat-chip>
+                <label class="radio-option">
+                  <input type="radio" name="color" [value]="color" [(ngModel)]="selectedColor" (change)="applyFilters()" />
+                  <span>{{ color }}</span>
+                </label>
               }
-            </mat-chip-set>
+            </div>
           </div>
 
           <div class="filter-group">
             <label>Tipo:</label>
-            <mat-chip-set>
-              <mat-chip
-                [class.selected]="!selectedType"
-                (click)="selectedType = null; applyFilters()">
-                Todos
-              </mat-chip>
+            <div class="radio-group">
+              <label class="radio-option">
+                <input type="radio" name="type" [value]="null" [(ngModel)]="selectedType" (change)="applyFilters()" />
+                <span>Todos</span>
+              </label>
               @for (type of types; track type) {
-                <mat-chip
-                  [class.selected]="selectedType === type"
-                  (click)="selectedType = type; applyFilters()">
-                  {{ type }}
-                </mat-chip>
+                <label class="radio-option">
+                  <input type="radio" name="type" [value]="type" [(ngModel)]="selectedType" (change)="applyFilters()" />
+                  <span>{{ type }}</span>
+                </label>
               }
-            </mat-chip-set>
+            </div>
           </div>
 
           <div class="filter-actions">
