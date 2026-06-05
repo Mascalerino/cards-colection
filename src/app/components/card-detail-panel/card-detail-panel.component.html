@@ -1,115 +1,117 @@
 <div class="card-detail-panel">
   <h2 mat-dialog-title>
     {{ cardTitle }}
-    <span class="price-totals" *ngIf="nonfoilTotal > 0 || foilTotal > 0">
-      <span class="price-total foil" *ngIf="foilTotal > 0"> ({{ foilTotal.toFixed(2) }}€) </span>
-      <span class="price-total nonfoil" *ngIf="nonfoilTotal > 0">
-        ({{ nonfoilTotal.toFixed(2) }}€)
+    @if (nonfoilTotal > 0 || foilTotal > 0) {
+      <span class="price-totals">
+        @if (foilTotal > 0) {
+          <span class="price-total foil"> ({{ foilTotal.toFixed(2) }}€) </span>
+        }
+        @if (nonfoilTotal > 0) {
+          <span class="price-total nonfoil">
+            ({{ nonfoilTotal.toFixed(2) }}€)
+          </span>
+        }
       </span>
-    </span>
+    }
   </h2>
 
   <mat-dialog-content>
     <div class="entries-list">
-      <div class="no-entries" *ngIf="allEntries.length === 0">
-        <p>No tienes ninguna carta de este tipo en tu colección</p>
-      </div>
-
-      <div class="entry-item" *ngFor="let entry of allEntries">
-        <div class="entry-header">
-          <mat-icon [class.foil]="entry.variant === 'foil'" class="type-icon">
-            {{ entry.variant === 'foil' ? 'auto_awesome' : 'circle' }}
-          </mat-icon>
-          <span class="entry-type">{{ entry.displayType }}</span>
+      @if (allEntries.length === 0) {
+        <div class="no-entries">
+          <p>No tienes ninguna carta de este tipo en tu colección</p>
         </div>
+      }
 
-        <div class="entry-details">
-          <span class="badge">{{ getLanguageLabel(entry.language) }}</span>
-          <span class="badge">{{ entry.condition }}</span>
+      @for (entry of allEntries; track entry) {
+        <div class="entry-item">
+          <div class="entry-header">
+            <mat-icon [class.foil]="entry.variant === 'foil'" class="type-icon">
+              {{ entry.variant === 'foil' ? 'auto_awesome' : 'circle' }}
+            </mat-icon>
+            <span class="entry-type">{{ entry.displayType }}</span>
+          </div>
+          <div class="entry-details">
+            <span class="badge">{{ getLanguageLabel(entry.language) }}</span>
+            <span class="badge">{{ entry.condition }}</span>
+          </div>
+          <div class="entry-controls">
+            <button mat-icon-button class="control-btn minus" (click)="decrementEntry(entry)">
+              <mat-icon>remove</mat-icon>
+            </button>
+            <span class="quantity">{{ entry.quantity }}</span>
+            <button mat-icon-button class="control-btn plus" (click)="incrementEntry(entry)">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
         </div>
-
-        <div class="entry-controls">
-          <button mat-icon-button class="control-btn minus" (click)="decrementEntry(entry)">
-            <mat-icon>remove</mat-icon>
-          </button>
-          <span class="quantity">{{ entry.quantity }}</span>
-          <button mat-icon-button class="control-btn plus" (click)="incrementEntry(entry)">
-            <mat-icon>add</mat-icon>
-          </button>
-        </div>
-      </div>
+      }
     </div>
 
     <!-- Historial de Ventas -->
-    <div class="sales-history" *ngIf="salesHistory.length > 0">
-      <h3>Historial de Ventas</h3>
-      <table mat-table [dataSource]="salesHistory" class="sales-table">
-        <!-- Fecha -->
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Fecha</th>
-          <td mat-cell *matCellDef="let sale">{{ formatDate(sale.saleDate) }}</td>
-        </ng-container>
-
-        <!-- Variante -->
-        <ng-container matColumnDef="variant">
-          <th mat-header-cell *matHeaderCellDef>Tipo</th>
-          <td mat-cell *matCellDef="let sale">
-            <span [class.foil-badge]="sale.variant === 'foil'" class="variant-badge">
-              {{ sale.variant === 'foil' ? 'Foil' : 'Normal' }}
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Idioma -->
-        <ng-container matColumnDef="language">
-          <th mat-header-cell *matHeaderCellDef>Idioma</th>
-          <td mat-cell *matCellDef="let sale">{{ getLanguageLabel(sale.language) }}</td>
-        </ng-container>
-
-        <!-- Estado -->
-        <ng-container matColumnDef="condition">
-          <th mat-header-cell *matHeaderCellDef>Estado</th>
-          <td mat-cell *matCellDef="let sale">{{ sale.condition }}</td>
-        </ng-container>
-
-        <!-- Cantidad -->
-        <ng-container matColumnDef="quantity">
-          <th mat-header-cell *matHeaderCellDef>Cantidad</th>
-          <td mat-cell *matCellDef="let sale">x{{ sale.quantity }}</td>
-        </ng-container>
-
-        <!-- Precio -->
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef>Precio Total</th>
-          <td mat-cell *matCellDef="let sale" class="price-cell">
-            {{ sale.totalPrice.toFixed(2) }}€
-            <span class="price-unit">({{ sale.pricePerUnit.toFixed(2) }}€/u)</span>
-          </td>
-        </ng-container>
-
-        <!-- Acciones -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Acciones</th>
-          <td mat-cell *matCellDef="let sale">
-            <button
-              mat-icon-button
-              color="warn"
-              (click)="deleteSale(sale)"
-              matTooltip="Eliminar venta y devolver cartas a la colección"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-      </table>
-
-      <div class="sales-total">
-        <strong>Total vendido: {{ getTotalSalesAmount() }}€</strong>
+    @if (salesHistory.length > 0) {
+      <div class="sales-history">
+        <h3>Historial de Ventas</h3>
+        <table mat-table [dataSource]="salesHistory" class="sales-table">
+          <!-- Fecha -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let sale">{{ formatDate(sale.saleDate) }}</td>
+          </ng-container>
+          <!-- Variante -->
+          <ng-container matColumnDef="variant">
+            <th mat-header-cell *matHeaderCellDef>Tipo</th>
+            <td mat-cell *matCellDef="let sale">
+              <span [class.foil-badge]="sale.variant === 'foil'" class="variant-badge">
+                {{ sale.variant === 'foil' ? 'Foil' : 'Normal' }}
+              </span>
+            </td>
+          </ng-container>
+          <!-- Idioma -->
+          <ng-container matColumnDef="language">
+            <th mat-header-cell *matHeaderCellDef>Idioma</th>
+            <td mat-cell *matCellDef="let sale">{{ getLanguageLabel(sale.language) }}</td>
+          </ng-container>
+          <!-- Estado -->
+          <ng-container matColumnDef="condition">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let sale">{{ sale.condition }}</td>
+          </ng-container>
+          <!-- Cantidad -->
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef>Cantidad</th>
+            <td mat-cell *matCellDef="let sale">x{{ sale.quantity }}</td>
+          </ng-container>
+          <!-- Precio -->
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef>Precio Total</th>
+            <td mat-cell *matCellDef="let sale" class="price-cell">
+              {{ sale.totalPrice.toFixed(2) }}€
+              <span class="price-unit">({{ sale.pricePerUnit.toFixed(2) }}€/u)</span>
+            </td>
+          </ng-container>
+          <!-- Acciones -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let sale">
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteSale(sale)"
+                matTooltip="Eliminar venta y devolver cartas a la colección"
+                >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+        <div class="sales-total">
+          <strong>Total vendido: {{ getTotalSalesAmount() }}€</strong>
+        </div>
       </div>
-    </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions>

@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,7 +25,6 @@ export interface AddCardDialogData {
   selector: 'app-add-card-dialog',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatDialogModule,
     MatFormFieldModule,
@@ -33,8 +32,8 @@ export interface AddCardDialogData {
     MatSelectModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatIconModule,
-  ],
+    MatIconModule
+],
   templateUrl: './add-card-dialog.component.html',
   styleUrl: './add-card-dialog.component.scss',
 })

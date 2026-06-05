@@ -2,47 +2,59 @@
   <div class="counter-row">
     <!-- Iconos de cartas coloreados según tipo -->
     <div class="card-icons" (click)="onIconClick($event)">
-      <mat-icon *ngIf="card.foil" class="card-icon foil" [class.has-cards]="foilCount > 0"
-        >book</mat-icon
-      >
-      <mat-icon *ngIf="card.nonfoil" class="card-icon nonfoil" [class.has-cards]="nonfoilCount > 0"
-        >book</mat-icon
-      >
-    </div>
-
-    <!-- Botón menos -->
-    <button
-      mat-icon-button
-      class="counter-btn minus"
-      (click)="onRemoveClick()"
-      [disabled]="getTotalCount() === 0"
-    >
-      <mat-icon>remove</mat-icon>
-    </button>
-
-    <!-- Contador total -->
-    <span class="count">{{ getTotalCount() }}</span>
-
-    <!-- Botón más -->
-    <div class="plus-container">
-      <button mat-icon-button class="counter-btn plus" (click)="toggleAddMenu($event)">
-        <mat-icon>add</mat-icon>
-      </button>
-
-      <!-- Mini panel para seleccionar tipo -->
-      <div class="add-menu" *ngIf="showAddMenu" (click)="$event.stopPropagation()">
-        <div *ngIf="card.foil" class="menu-item foil-option" (click)="onAddClick('foil')">
-          <span>Foil</span>
-          <span class="count-badge">{{ foilCount }}</span>
+      @if (card.foil) {
+        <mat-icon class="card-icon foil" [class.has-cards]="foilCount > 0"
+          >book</mat-icon
+          >
+        }
+        @if (card.nonfoil) {
+          <mat-icon class="card-icon nonfoil" [class.has-cards]="nonfoilCount > 0"
+            >book</mat-icon
+            >
+          }
         </div>
-        <div *ngIf="card.nonfoil" class="menu-item nonfoil-option" (click)="onAddClick('nonfoil')">
-          <span>No Foil</span>
-          <span class="count-badge">{{ nonfoilCount }}</span>
+
+        <!-- Botón menos -->
+        <button
+          mat-icon-button
+          class="counter-btn minus"
+          (click)="onRemoveClick()"
+          [disabled]="getTotalCount() === 0"
+          >
+          <mat-icon>remove</mat-icon>
+        </button>
+
+        <!-- Contador total -->
+        <span class="count">{{ getTotalCount() }}</span>
+
+        <!-- Botón más -->
+        <div class="plus-container">
+          <button mat-icon-button class="counter-btn plus" (click)="toggleAddMenu($event)">
+            <mat-icon>add</mat-icon>
+          </button>
+
+          <!-- Mini panel para seleccionar tipo -->
+          @if (showAddMenu) {
+            <div class="add-menu" (click)="$event.stopPropagation()">
+              @if (card.foil) {
+                <div class="menu-item foil-option" (click)="onAddClick('foil')">
+                  <span>Foil</span>
+                  <span class="count-badge">{{ foilCount }}</span>
+                </div>
+              }
+              @if (card.nonfoil) {
+                <div class="menu-item nonfoil-option" (click)="onAddClick('nonfoil')">
+                  <span>No Foil</span>
+                  <span class="count-badge">{{ nonfoilCount }}</span>
+                </div>
+              }
+            </div>
+          }
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- Backdrop para cerrar el menú -->
-<div class="menu-backdrop" *ngIf="showAddMenu" (click)="closeMenu()"></div>
+    <!-- Backdrop para cerrar el menú -->
+    @if (showAddMenu) {
+      <div class="menu-backdrop" (click)="closeMenu()"></div>
+    }

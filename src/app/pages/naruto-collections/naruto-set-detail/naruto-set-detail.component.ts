@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -34,7 +34,6 @@ interface NarutoSeries {
   selector: 'app-naruto-set-detail',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatButtonModule,
     MatIconModule,
@@ -43,8 +42,8 @@ interface NarutoSeries {
     MatFormFieldModule,
     MatInputModule,
     CardCheckboxItemComponent,
-    ProgressStatsComponent,
-  ],
+    ProgressStatsComponent
+],
   templateUrl: './naruto-set-detail.component.html',
   styleUrl: './naruto-set-detail.component.scss',
 })

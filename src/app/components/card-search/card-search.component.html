@@ -6,42 +6,49 @@
       [(ngModel)]="searchText"
       (ngModelChange)="onSearchChange()"
       [placeholder]="placeholder"
-    />
+      />
     <mat-icon matPrefix>search</mat-icon>
-    <button
-      mat-icon-button
-      matSuffix
-      *ngIf="searchText"
-      (click)="clearSearch()"
-      aria-label="Limpiar búsqueda"
-    >
-      <mat-icon>close</mat-icon>
-    </button>
+    @if (searchText) {
+      <button
+        mat-icon-button
+        matSuffix
+        (click)="clearSearch()"
+        aria-label="Limpiar búsqueda"
+        >
+        <mat-icon>close</mat-icon>
+      </button>
+    }
   </mat-form-field>
 
-  <div class="filters-row" *ngIf="showFilters">
-    <div class="filter-options">
-      <mat-radio-group [(ngModel)]="selectedFilter" (change)="onFilterChange()">
-        <mat-radio-button *ngFor="let option of filterOptions" [value]="option.value">
-          {{ option.label }}
-        </mat-radio-button>
-      </mat-radio-group>
+  @if (showFilters) {
+    <div class="filters-row">
+      <div class="filter-options">
+        <mat-radio-group [(ngModel)]="selectedFilter" (change)="onFilterChange()">
+          @for (option of filterOptions; track option) {
+            <mat-radio-button [value]="option.value">
+              {{ option.label }}
+            </mat-radio-button>
+          }
+        </mat-radio-group>
+      </div>
+      @if (showVariantFilters && selectedFilter !== 'all') {
+        <div
+          class="filter-options variant-filters"
+          >
+          <mat-checkbox [(ngModel)]="filterFoil" (change)="onVariantFilterChange()">
+            Foil
+          </mat-checkbox>
+          <mat-checkbox [(ngModel)]="filterNonfoil" (change)="onVariantFilterChange()">
+            No Foil
+          </mat-checkbox>
+        </div>
+      }
     </div>
+  }
 
-    <div
-      class="filter-options variant-filters"
-      *ngIf="showVariantFilters && selectedFilter !== 'all'"
-    >
-      <mat-checkbox [(ngModel)]="filterFoil" (change)="onVariantFilterChange()">
-        Foil
-      </mat-checkbox>
-      <mat-checkbox [(ngModel)]="filterNonfoil" (change)="onVariantFilterChange()">
-        No Foil
-      </mat-checkbox>
+  @if (showFilters) {
+    <div class="results-count">
+      <span>Mostrando {{ filteredCount }} de {{ totalCount }} resultados</span>
     </div>
-  </div>
-
-  <div class="results-count" *ngIf="showFilters">
-    <span>Mostrando {{ filteredCount }} de {{ totalCount }} resultados</span>
-  </div>
+  }
 </div>

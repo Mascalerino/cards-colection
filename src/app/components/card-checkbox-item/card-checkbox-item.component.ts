@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-card-checkbox-item',
   standalone: true,
-  imports: [CommonModule, MatCheckboxModule, FormsModule],
+  imports: [MatCheckboxModule, FormsModule],
   templateUrl: './card-checkbox-item.component.html',
   styleUrl: './card-checkbox-item.component.scss',
 })

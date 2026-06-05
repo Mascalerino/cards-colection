@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -26,13 +26,12 @@ interface DisplayEntry extends CardEntry {
   selector: 'app-card-detail-panel',
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
-    MatTooltipModule,
-  ],
+    MatTooltipModule
+],
   templateUrl: './card-detail-panel.component.html',
   styleUrl: './card-detail-panel.component.scss',
 })

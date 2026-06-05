@@ -21,16 +21,20 @@
         accept=".csv"
         (change)="onFileSelected($event)"
         style="display: none"
-      />
+        />
     </div>
 
     <!-- Errores de importación CSV -->
-    <div class="csv-errors" *ngIf="csvImportErrors.length > 0">
-      <h4>Errores de importación:</h4>
-      <ul>
-        <li *ngFor="let error of csvImportErrors">{{ error }}</li>
-      </ul>
-    </div>
+    @if (csvImportErrors.length > 0) {
+      <div class="csv-errors">
+        <h4>Errores de importación:</h4>
+        <ul>
+          @for (error of csvImportErrors; track error) {
+            <li>{{ error }}</li>
+          }
+        </ul>
+      </div>
+    }
 
     <!-- Barra de búsqueda -->
     <div class="search-section">
@@ -41,120 +45,131 @@
           [(ngModel)]="searchText"
           (ngModelChange)="onSearchChange()"
           placeholder="Ej: Lightning Bolt o 123"
-        />
+          />
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
 
     <!-- Resultados de búsqueda -->
-    <div class="search-results" *ngIf="searchText && filteredCards.length > 0">
-      <div
-        class="result-item"
-        *ngFor="let card of filteredCards"
-        (click)="selectCard(card)"
-        [class.selected]="selectedCard?.id === card.id"
-      >
-        <img
-          [src]="card.image_uris?.normal || 'assets/placeholder-card.png'"
-          [alt]="card.name"
-          class="card-thumbnail"
-        />
-        <div class="result-info">
-          <div class="result-name">{{ card.name }}</div>
-          <div class="result-number">#{{ card.collector_number }}</div>
-        </div>
-        <div class="result-count">
-          <span class="count-badge">{{ getCardTotalCount(card.id) }} en colección</span>
-        </div>
+    @if (searchText && filteredCards.length > 0) {
+      <div class="search-results">
+        @for (card of filteredCards; track card) {
+          <div
+            class="result-item"
+            (click)="selectCard(card)"
+            [class.selected]="selectedCard?.id === card.id"
+            >
+            <img
+              [src]="card.image_uris?.normal || 'assets/placeholder-card.png'"
+              [alt]="card.name"
+              class="card-thumbnail"
+              />
+            <div class="result-info">
+              <div class="result-name">{{ card.name }}</div>
+              <div class="result-number">#{{ card.collector_number }}</div>
+            </div>
+            <div class="result-count">
+              <span class="count-badge">{{ getCardTotalCount(card.id) }} en colección</span>
+            </div>
+          </div>
+        }
       </div>
-    </div>
+    }
 
-    <div class="no-results" *ngIf="searchText && filteredCards.length === 0">
-      <p>No se encontraron cartas en tu colección con ese nombre o número</p>
-    </div>
+    @if (searchText && filteredCards.length === 0) {
+      <div class="no-results">
+        <p>No se encontraron cartas en tu colección con ese nombre o número</p>
+      </div>
+    }
 
     <!-- Formulario de venta -->
-    <div class="sale-form" *ngIf="selectedCard">
-      <h3 class="form-title">{{ selectedCard.name }} #{{ selectedCard.collector_number }}</h3>
-
-      <!-- Selección de entrada específica -->
-      <div class="entries-selection">
-        <h4>Selecciona la carta a vender:</h4>
-        <div class="entry-list">
-          <div
-            class="entry-option"
-            *ngFor="let entry of availableEntries"
-            (click)="selectEntry(entry)"
-            [class.selected]="selectedEntry === entry"
-            [class.disabled]="entry.quantity === 0"
-          >
-            <div class="entry-details">
-              <mat-icon [class.foil]="entry.variant === 'foil'">
-                {{ entry.variant === 'foil' ? 'auto_awesome' : 'circle' }}
-              </mat-icon>
-              <span class="entry-variant">{{ entry.variant === 'foil' ? 'Foil' : 'Normal' }}</span>
-              <span class="entry-lang">{{ getLanguageLabel(entry.language) }}</span>
-              <span class="entry-condition">{{ entry.condition }}</span>
-            </div>
-            <span class="entry-stock">Stock: {{ entry.quantity }}</span>
+    @if (selectedCard) {
+      <div class="sale-form">
+        <h3 class="form-title">{{ selectedCard.name }} #{{ selectedCard.collector_number }}</h3>
+        <!-- Selección de entrada específica -->
+        <div class="entries-selection">
+          <h4>Selecciona la carta a vender:</h4>
+          <div class="entry-list">
+            @for (entry of availableEntries; track entry) {
+              <div
+                class="entry-option"
+                (click)="selectEntry(entry)"
+                [class.selected]="selectedEntry === entry"
+                [class.disabled]="entry.quantity === 0"
+                >
+                <div class="entry-details">
+                  <mat-icon [class.foil]="entry.variant === 'foil'">
+                    {{ entry.variant === 'foil' ? 'auto_awesome' : 'circle' }}
+                  </mat-icon>
+                  <span class="entry-variant">{{ entry.variant === 'foil' ? 'Foil' : 'Normal' }}</span>
+                  <span class="entry-lang">{{ getLanguageLabel(entry.language) }}</span>
+                  <span class="entry-condition">{{ entry.condition }}</span>
+                </div>
+                <span class="entry-stock">Stock: {{ entry.quantity }}</span>
+              </div>
+            }
           </div>
         </div>
+        <!-- Cantidad y precio -->
+        @if (selectedEntry) {
+          <div class="form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Cantidad</mat-label>
+              <input
+                matInput
+                type="number"
+                [(ngModel)]="saleQuantity"
+                [max]="selectedEntry.quantity"
+                min="1"
+                />
+              <mat-hint>Máximo: {{ selectedEntry.quantity }}</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Precio por unidad (€)</mat-label>
+              <input matInput type="number" [(ngModel)]="pricePerUnit" min="0" step="0.01" />
+            </mat-form-field>
+          </div>
+        }
+        @if (selectedEntry && saleQuantity > 0 && pricePerUnit > 0) {
+          <div class="total-amount">
+            <strong>Total: {{ (saleQuantity * pricePerUnit).toFixed(2) }}€</strong>
+          </div>
+        }
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addSale()"
+          [disabled]="!canAddSale()"
+          class="add-sale-btn"
+          >
+          <mat-icon>add_shopping_cart</mat-icon>
+          Registrar Venta
+        </button>
       </div>
-
-      <!-- Cantidad y precio -->
-      <div class="form-row" *ngIf="selectedEntry">
-        <mat-form-field appearance="outline">
-          <mat-label>Cantidad</mat-label>
-          <input
-            matInput
-            type="number"
-            [(ngModel)]="saleQuantity"
-            [max]="selectedEntry.quantity"
-            min="1"
-          />
-          <mat-hint>Máximo: {{ selectedEntry.quantity }}</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline">
-          <mat-label>Precio por unidad (€)</mat-label>
-          <input matInput type="number" [(ngModel)]="pricePerUnit" min="0" step="0.01" />
-        </mat-form-field>
-      </div>
-
-      <div class="total-amount" *ngIf="selectedEntry && saleQuantity > 0 && pricePerUnit > 0">
-        <strong>Total: {{ (saleQuantity * pricePerUnit).toFixed(2) }}€</strong>
-      </div>
-
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="addSale()"
-        [disabled]="!canAddSale()"
-        class="add-sale-btn"
-      >
-        <mat-icon>add_shopping_cart</mat-icon>
-        Registrar Venta
-      </button>
-    </div>
+    }
 
     <!-- Lista de ventas registradas en esta sesión -->
-    <div class="sales-list" *ngIf="sessionSales.length > 0">
-      <h3>Ventas registradas en esta sesión:</h3>
-      <div class="sale-item" *ngFor="let sale of sessionSales">
-        <div class="sale-info">
-          <strong>{{ sale.cardName }}</strong> #{{ sale.collectorNumber }}
-          <span class="sale-quantity">x{{ sale.quantity }}</span>
+    @if (sessionSales.length > 0) {
+      <div class="sales-list">
+        <h3>Ventas registradas en esta sesión:</h3>
+        @for (sale of sessionSales; track sale) {
+          <div class="sale-item">
+            <div class="sale-info">
+              <strong>{{ sale.cardName }}</strong> #{{ sale.collectorNumber }}
+              <span class="sale-quantity">x{{ sale.quantity }}</span>
+            </div>
+            <div class="sale-details">
+              {{ getLanguageLabel(sale.language) }} - {{ sale.condition }} -
+              {{ sale.variant === 'foil' ? 'Foil' : 'Normal' }}
+            </div>
+            <div class="sale-price">{{ sale.totalPrice.toFixed(2) }}€</div>
+          </div>
+        }
+        <div class="session-total">
+          <strong>Total de la sesión: {{ getSessionTotal().toFixed(2) }}€</strong>
         </div>
-        <div class="sale-details">
-          {{ getLanguageLabel(sale.language) }} - {{ sale.condition }} -
-          {{ sale.variant === 'foil' ? 'Foil' : 'Normal' }}
-        </div>
-        <div class="sale-price">{{ sale.totalPrice.toFixed(2) }}€</div>
       </div>
-      <div class="session-total">
-        <strong>Total de la sesión: {{ getSessionTotal().toFixed(2) }}€</strong>
-      </div>
-    </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions>

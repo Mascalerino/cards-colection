@@ -11,24 +11,30 @@
     <mat-divider></mat-divider>
 
     <div class="collections-list">
-      <div class="collection-item" *ngFor="let series of series; let i = index">
-        <mat-checkbox
-          [(ngModel)]="selectedSeries[i]"
-          (change)="onSelectionChange()"
-          color="primary"
-        >
-          <div class="collection-info">
-            <span class="collection-name">{{ series.name }}</span>
-            <span class="collection-box" *ngIf="series.box">({{ series.box }})</span>
-          </div>
-        </mat-checkbox>
-      </div>
+      @for (series of series; track series; let i = $index) {
+        <div class="collection-item">
+          <mat-checkbox
+            [(ngModel)]="selectedSeries[i]"
+            (change)="onSelectionChange()"
+            color="primary"
+            >
+            <div class="collection-info">
+              <span class="collection-name">{{ series.name }}</span>
+              @if (series.box) {
+                <span class="collection-box">({{ series.box }})</span>
+              }
+            </div>
+          </mat-checkbox>
+        </div>
+      }
     </div>
 
-    <div class="selection-summary" *ngIf="getSelectedCount() > 0">
-      <mat-icon>info</mat-icon>
-      <span>{{ getSelectedCount() }} colección(es) seleccionada(s)</span>
-    </div>
+    @if (getSelectedCount() > 0) {
+      <div class="selection-summary">
+        <mat-icon>info</mat-icon>
+        <span>{{ getSelectedCount() }} colección(es) seleccionada(s)</span>
+      </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions>
@@ -38,7 +44,7 @@
       color="primary"
       (click)="confirm()"
       [disabled]="getSelectedCount() === 0"
-    >
+      >
       <mat-icon>picture_as_pdf</mat-icon>
       Generar PDF
     </button>

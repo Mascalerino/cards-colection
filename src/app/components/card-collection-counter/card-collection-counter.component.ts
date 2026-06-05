@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Card } from '@models/card.model';
@@ -8,7 +8,7 @@ import { CardVariant } from '@models/card-entry.model';
 @Component({
   selector: 'app-card-collection-counter',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [MatIconModule, MatButtonModule],
   templateUrl: './card-collection-counter.component.html',
   styleUrl: './card-collection-counter.component.scss',
 })

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
@@ -23,7 +23,7 @@ interface NarutoSeries {
 @Component({
   selector: 'app-naruto-collections',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, SetListComponent],
+  imports: [MatButtonModule, MatIconModule, SetListComponent],
   templateUrl: './naruto-collections.component.html',
   styleUrl: './naruto-collections.component.scss',
 })

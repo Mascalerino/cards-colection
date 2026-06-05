@@ -1,7 +1,11 @@
 <div class="progress-stats">
-  <span class="stats-count" *ngIf="showCount">{{ current }}/{{ total }}</span>
+  @if (showCount) {
+    <span class="stats-count">{{ current }}/{{ total }}</span>
+  }
   <div class="progress-bar">
     <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
   </div>
-  <span class="stats-percentage" *ngIf="showPercentage">{{ getProgressPercentage() }}%</span>
+  @if (showPercentage) {
+    <span class="stats-percentage">{{ getProgressPercentage() }}%</span>
+  }
 </div>

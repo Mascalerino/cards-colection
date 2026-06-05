@@ -1,10 +1,10 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-progress-stats',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './progress-stats.component.html',
   styleUrl: './progress-stats.component.scss',
 })

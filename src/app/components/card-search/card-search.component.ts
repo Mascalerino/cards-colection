@@ -1,5 +1,5 @@
 import { Component, Output, EventEmitter, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -16,14 +16,13 @@ export interface FilterOption {
   selector: 'app-card-search',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatIconModule,
     MatRadioModule,
-    MatCheckboxModule,
-  ],
+    MatCheckboxModule
+],
   templateUrl: './card-search.component.html',
   styleUrl: './card-search.component.scss',
 })
