@@ -52,6 +52,11 @@
             }
           </div>
           <div class="card-info">
+            @if (card.market_price) {
+              <div class="card-prices">
+                <span class="price-item">{{ card.market_price.toFixed(2) }}€</span>
+              </div>
+            }
             <h3 class="card-name">{{ card.card_name }}</h3>
             <p class="card-id">{{ card.card_set_id }}</p>
             <div class="card-meta">
@@ -74,9 +79,4 @@
     </div>
   }
 </div>
-@if (card.market_price) {
-              <div class="card-prices">
-                <span class="price-item">{{ card.market_price.toFixed(2) }}€</span>
-              </div>
-            }
             
