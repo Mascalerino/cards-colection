@@ -8,7 +8,7 @@ import { OnePieceCard, OnePieceSet, OnePieceDeck, OnePieceCardEntry } from '@mod
   providedIn: 'root',
 })
 export class OnePieceService {
-  private readonly apiBaseUrl = 'https://optcgapi.com/api';
+  private readonly apiBaseUrl = '/api';
 
   constructor(private http: HttpClient) {}
 

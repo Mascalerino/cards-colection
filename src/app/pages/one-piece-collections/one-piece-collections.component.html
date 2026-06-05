@@ -19,7 +19,7 @@
     <mat-tab-group>
       <mat-tab label="Sets ({{ sets.length }})">
         <div class="sets-list">
-          @for (set of sets; track set.set_id) {
+          @for (set of sets; track $index) {
             <div class="set-card" (click)="onSetClick(set)">
               <div class="set-content">
                 <div class="set-text">
@@ -44,7 +44,7 @@
 
       <mat-tab label="Starter Decks ({{ decks.length }})">
         <div class="sets-list">
-          @for (deck of decks; track deck.deck_id) {
+          @for (deck of decks; track $index) {
             <div class="set-card" (click)="onDeckClick(deck)">
               <div class="set-content">
                 <div class="set-text">

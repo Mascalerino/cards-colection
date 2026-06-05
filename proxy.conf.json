@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "https://optcgapi.com",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

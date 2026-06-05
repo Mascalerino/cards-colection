@@ -73,7 +73,8 @@
               "buildTarget": "cards-collection:build:production"
             },
             "development": {
-              "buildTarget": "cards-collection:build:development"
+              "buildTarget": "cards-collection:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
