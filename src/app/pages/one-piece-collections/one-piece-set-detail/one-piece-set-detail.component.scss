@@ -97,33 +97,35 @@
     margin: 0 auto 2rem;
 
     .sort-section {
-      background: white;
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-      margin-top: 1rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      margin-top: 1.5rem;
+      text-align: center;
 
       label {
-        display: block;
-        margin-bottom: 0.75rem;
+        display: inline-block;
+        margin-right: 1rem;
+        margin-bottom: 0;
         font-weight: 600;
         color: #1d1d1f;
         font-size: 0.95rem;
+        vertical-align: middle;
       }
 
       mat-chip-set {
-        display: flex;
+        display: inline-flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+        vertical-align: middle;
 
         mat-chip {
           cursor: pointer;
           transition: all 0.2s ease;
-          background: #f5f5f7;
+          background: white;
           color: #1d1d1f;
           display: flex;
           align-items: center;
           gap: 0.25rem;
+          border: 1px solid #e8e8ed;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
           mat-icon {
             font-size: 1rem;
@@ -133,14 +135,16 @@
           }
 
           &:hover {
-            background: #e8e8ed;
-            transform: translateY(-2px);
+            background: #f5f5f7;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
           }
 
           &.selected {
             background-color: #0071e3;
             color: white;
-            box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+            border-color: #0071e3;
+            box-shadow: 0 2px 6px rgba(0, 113, 227, 0.3);
           }
         }
       }
@@ -148,30 +152,28 @@
 
     .advanced-filters-toggle {
       text-align: center;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
 
       .toggle-btn {
-        background: white;
-        border: 2px solid #e8e8ed;
-        border-radius: 12px;
-        padding: 0.75rem 2rem;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        background: transparent;
+        border: none;
+        padding: 0.5rem 1rem;
         transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         font-weight: 600;
-        color: #1d1d1f;
+        color: #0071e3;
+        cursor: pointer;
 
         &:hover {
-          background: #f5f5f7;
-          border-color: #0071e3;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+          background: transparent;
+          color: #0051a3;
+          transform: translateY(-1px);
         }
 
         mat-icon {
-          color: #0071e3;
+          color: inherit;
           font-size: 1.2rem;
           width: 20px;
           height: 20px;
@@ -184,48 +186,52 @@
     }
 
     .advanced-filters {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-top: 1rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      margin-top: 1.5rem;
       animation: slideDown 0.3s ease;
 
       .filter-group {
         margin-bottom: 1.5rem;
+        text-align: center;
 
         &:last-of-type {
           margin-bottom: 1rem;
         }
 
         label {
-          display: block;
-          margin-bottom: 0.5rem;
+          display: inline-block;
+          margin-right: 1rem;
+          margin-bottom: 0;
           font-weight: 600;
           color: #1d1d1f;
           font-size: 0.95rem;
+          vertical-align: middle;
         }
 
         mat-chip-set {
-          display: flex;
+          display: inline-flex;
           flex-wrap: wrap;
           gap: 0.5rem;
+          vertical-align: middle;
 
           mat-chip {
             cursor: pointer;
             transition: all 0.2s ease;
-            background: #f5f5f7;
+            background: white;
             color: #1d1d1f;
+            border: 1px solid #e8e8ed;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 
             &:hover {
-              background: #e8e8ed;
-              transform: translateY(-2px);
+              background: #f5f5f7;
+              transform: translateY(-1px);
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
             }
 
             &.selected {
               background-color: #0071e3;
               color: white;
-              box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+              border-color: #0071e3;
+              box-shadow: 0 2px 6px rgba(0, 113, 227, 0.3);
             }
           }
         }
@@ -234,7 +240,6 @@
       .filter-actions {
         text-align: center;
         padding-top: 1rem;
-        border-top: 1px solid #e8e8ed;
       }
     }
   }
