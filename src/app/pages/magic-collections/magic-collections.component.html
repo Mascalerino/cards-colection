@@ -4,6 +4,12 @@
   </button>
 
   <h1>Colecciones de Magic: The Gathering</h1>
+  @if (totalCollectionValue > 0) {
+    <div class="total-value">
+      <span class="value-label">Valor total de la colección:</span>
+      <span class="value-amount">{{ totalCollectionValue.toFixed(2) }}€</span>
+    </div>
+  }
   <p class="subtitle">Selecciona un set para ver tu colección</p>
 
   <app-set-list [sets]="magicSets" (setClicked)="onSetClick($event)"></app-set-list>

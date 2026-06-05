@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { OnePieceCard, OnePieceSet, OnePieceCardEntry } from '@models/one-piece-card.model';
+import { OnePieceCard, OnePieceSet, OnePieceDeck, OnePieceCardEntry } from '@models/one-piece-card.model';
 
 @Injectable({
   providedIn: 'root',
@@ -29,11 +29,45 @@ export class OnePieceService {
   }
 
   /**
+   * Obtiene todos los starter decks de One Piece desde la API
+   */
+  getAllDecks(): Observable<OnePieceDeck[]> {
+    return this.http.get<Array<{ deck_name: string; deck_id: string }>>(`${this.apiBaseUrl}/allDecks/`).pipe(
+      map((decks) =>
+        decks.map((deck) => ({
+          deck_id: deck.deck_id,
+          deck_name: deck.deck_name,
+          ownedCards: 0,
+          totalCards: 0,
+        }))
+      )
+    );
+  }
+
+  /**
    * Obtiene todas las cartas de un set específico
    */
   getSetCards(setId: string): Observable<OnePieceCard[]> {
     return this.http
       .get<OnePieceCard[]>(`${this.apiBaseUrl}/sets/filtered/?set_id=${setId}`)
+      .pipe(
+        map((cards) =>
+          cards.sort((a, b) =>
+            a.card_set_id.localeCompare(b.card_set_id, undefined, {
+              numeric: true,
+              sensitivity: 'base',
+            })
+          )
+        )
+      );
+  }
+
+  /**
+   * Obtiene todas las cartas de un deck específico
+   */
+  getDeckCards(deckId: string): Observable<OnePieceCard[]> {
+    return this.http
+      .get<OnePieceCard[]>(`${this.apiBaseUrl}/decks/filtered/?deck_id=${deckId}`)
       .pipe(
         map((cards) =>
           cards.sort((a, b) =>

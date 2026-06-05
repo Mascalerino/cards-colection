@@ -33,6 +33,31 @@
     text-align: center;
   }
 
+  .total-value {
+    text-align: center;
+    margin: 1rem 0;
+    padding: 1rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: inline-block;
+    margin-left: 50%;
+    transform: translateX(-50%);
+
+    .value-label {
+      color: #6e6e73;
+      font-weight: 600;
+      margin-right: 0.75rem;
+      font-size: 1rem;
+    }
+
+    .value-amount {
+      color: #0071e3;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+  }
+
   .subtitle {
     color: #6e6e73;
     font-size: 1.2rem;

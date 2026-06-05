@@ -24,6 +24,20 @@ export interface OnePieceSet {
   set_id: string; // ej: "OP-01"
   set_name: string; // ej: "Romance Dawn"
   totalCards?: number;
+  ownedCards: number;  collectionValue?: number;
+}
+
+export interface OnePieceDeck {
+  deck_id: string; // ej: "ST-01"  
+  deck_name: string;
+  totalCards?: number;
+  ownedCards: number;
+  collectionValue?: number;}
+
+export interface OnePieceDeck {
+  deck_id: string;
+  deck_name: string;
+  totalCards?: number;
   ownedCards: number;
 }
 
