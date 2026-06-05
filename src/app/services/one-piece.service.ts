@@ -13,10 +13,10 @@ export class OnePieceService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Obtiene todos los sets de One Piece desde la API
+   * Obtiene todos los sets de One Piece desde JSON local
    */
   getAllSets(): Observable<OnePieceSet[]> {
-    return this.http.get<Array<{ set_name: string; set_id: string }>>(`${this.apiBaseUrl}/allSets/`).pipe(
+    return this.http.get<Array<{ set_name: string; set_id: string }>>('assets/card-collection/onepiece-sets.json').pipe(
       map((sets) =>
         sets.map((set) => ({
           set_id: set.set_id,
@@ -29,14 +29,14 @@ export class OnePieceService {
   }
 
   /**
-   * Obtiene todos los starter decks de One Piece desde la API
+   * Obtiene todos los starter decks de One Piece desde JSON local
    */
   getAllDecks(): Observable<OnePieceDeck[]> {
-    return this.http.get<Array<{ deck_name: string; deck_id: string }>>(`${this.apiBaseUrl}/allDecks/`).pipe(
+    return this.http.get<Array<{ structure_deck_name: string; structure_deck_id: string }>>('assets/card-collection/onepiece-decks.json').pipe(
       map((decks) =>
         decks.map((deck) => ({
-          deck_id: deck.deck_id,
-          deck_name: deck.deck_name,
+          deck_id: deck.structure_deck_id,
+          deck_name: deck.structure_deck_name,
           ownedCards: 0,
           totalCards: 0,
         }))
