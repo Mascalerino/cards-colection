@@ -40,6 +40,9 @@ export class OnePieceSetDetailComponent implements OnInit {
   selectedColor: string | null = null;
   selectedType: string | null = null;
 
+  // Ordenamiento
+  sortOrder: string = 'none';
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -125,6 +128,55 @@ export class OnePieceSetDetailComponent implements OnInit {
 
       return matchesSearch && matchesRarity && matchesColor && matchesType;
     });
+
+    // Aplicar ordenamiento
+    this.applySorting();
+  }
+
+  onSortChange(sort: string): void {
+    this.sortOrder = sort;
+    this.applySorting();
+  }
+
+  applySorting(): void {
+    switch (this.sortOrder) {
+      case 'cardNumberAsc':
+        this.filteredCards.sort((a, b) => {
+          const numA = this.extractCardNumber(a.card_set_id);
+          const numB = this.extractCardNumber(b.card_set_id);
+          return numA - numB;
+        });
+        break;
+      case 'cardNumberDesc':
+        this.filteredCards.sort((a, b) => {
+          const numA = this.extractCardNumber(a.card_set_id);
+          const numB = this.extractCardNumber(b.card_set_id);
+          return numB - numA;
+        });
+        break;
+      case 'priceAsc':
+        this.filteredCards.sort((a, b) => {
+          const priceA = a.market_price || 0;
+          const priceB = b.market_price || 0;
+          return priceA - priceB;
+        });
+        break;
+      case 'priceDesc':
+        this.filteredCards.sort((a, b) => {
+          const priceA = a.market_price || 0;
+          const priceB = b.market_price || 0;
+          return priceB - priceA;
+        });
+        break;
+      default:
+        // Sin ordenamiento específico
+        break;
+    }
+  }
+
+  extractCardNumber(cardId: string): number {
+    const match = cardId.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
   }
 
   toggleAdvancedFilters(): void {

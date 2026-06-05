@@ -41,10 +41,45 @@
         >
       </app-card-search>
 
+      <div class="sort-section">
+        <label>Ordenar por:</label>
+        <mat-chip-set>
+          <mat-chip
+            [class.selected]="sortOrder === 'none'"
+            (click)="onSortChange('none')">
+            Sin orden
+          </mat-chip>
+          <mat-chip
+            [class.selected]="sortOrder === 'cardNumberAsc'"
+            (click)="onSortChange('cardNumberAsc')">
+            <mat-icon>arrow_upward</mat-icon>
+            N° Carta
+          </mat-chip>
+          <mat-chip
+            [class.selected]="sortOrder === 'cardNumberDesc'"
+            (click)="onSortChange('cardNumberDesc')">
+            <mat-icon>arrow_downward</mat-icon>
+            N° Carta
+          </mat-chip>
+          <mat-chip
+            [class.selected]="sortOrder === 'priceAsc'"
+            (click)="onSortChange('priceAsc')">
+            <mat-icon>arrow_upward</mat-icon>
+            Precio
+          </mat-chip>
+          <mat-chip
+            [class.selected]="sortOrder === 'priceDesc'"
+            (click)="onSortChange('priceDesc')">
+            <mat-icon>arrow_downward</mat-icon>
+            Precio
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
       <div class="advanced-filters-toggle">
-        <button mat-stroked-button (click)="toggleAdvancedFilters()">
-          <mat-icon>{{ showAdvancedFilters ? 'expand_less' : 'expand_more' }}</mat-icon>
-          Búsqueda avanzada
+        <button mat-button class="toggle-btn" (click)="toggleAdvancedFilters()">
+          <mat-icon>{{ showAdvancedFilters ? 'expand_less' : 'tune' }}</mat-icon>
+          <span>Búsqueda avanzada</span>
         </button>
       </div>
 
