@@ -107,8 +107,7 @@ export class OnePieceCollectionsComponent implements OnInit {
     return (item.ownedCards / item.totalCards) * 100;
   }
 
-  calculateSetValue(setId: string, cards: any[]): void {
-    const collection = this.onePieceServicOnePieceCard[]): void {
+  calculateSetValue(setId: string, cards: OnePieceCard[]): void {
     const collection = this.onePieceService.loadCollection(setId);
     let setTotal = 0;
 
@@ -122,7 +121,8 @@ export class OnePieceCollectionsComponent implements OnInit {
     this.totalCollectionValue += setTotal;
   }
 
-  calculateDeckValue(deckId: string, cards: OnePieceCarddCollection(deckId);
+  calculateDeckValue(deckId: string, cards: OnePieceCard[]): void {
+    const collection = this.onePieceService.loadCollection(deckId);
     let deckTotal = 0;
 
     collection.forEach((entry) => {
