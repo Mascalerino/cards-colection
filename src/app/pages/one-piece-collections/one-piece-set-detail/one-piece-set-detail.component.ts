@@ -7,11 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { OnePieceService } from '../../../services/one-piece.service';
 import { OnePieceCard, OnePieceCardEntry } from '@models/one-piece-card.model';
+import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
 
 @Component({
   selector: 'app-one-piece-set-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatChipsModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, MatChipsModule, ProgressStatsComponent],
   templateUrl: './one-piece-set-detail.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './one-piece-set-detail.component.scss',

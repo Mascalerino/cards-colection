@@ -3,22 +3,10 @@
     <mat-icon>arrow_back</mat-icon>
   </button>
 
-  <div class="header">
+  <div class="set-header">
     <h1>{{ setName }}</h1>
-    <div class="stats">
-      <div class="stat-item">
-        <span class="stat-value">{{ getUniqueCardsOwned() }}</span>
-        <span class="stat-label">/ {{ cards.length }} cartas únicas</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value">{{ getTotalOwned() }}</span>
-        <span class="stat-label">cartas totales</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value">{{ getProgress() | number: '1.0-0' }}%</span>
-        <span class="stat-label">completado</span>
-      </div>
-    </div>
+    <app-progress-stats [current]="getUniqueCardsOwned()" [total]="cards.length">
+    </app-progress-stats>
   </div>
 
   @if (loading) {
