@@ -136,7 +136,7 @@
     <div class="cards-grid">
       @for (card of filteredCards; track card.card_set_id) {
         <div class="card-item" [class.owned]="getCardQuantity(card.card_set_id) > 0">
-          <div class="card-image-container">
+          <div class="card-image-container" (click)="openCardMarket(card, $event)">
             <img [src]="card.card_image" [alt]="card.card_name" />
             @if (getCardQuantity(card.card_set_id) > 0) {
               <div class="quantity-badge">{{ getCardQuantity(card.card_set_id) }}</div>

@@ -198,6 +198,17 @@ export class OnePieceSetDetailComponent implements OnInit {
     }
   }
 
+  openCardMarket(card: OnePieceCard, event: Event): void {
+    event.stopPropagation();
+
+    // Crear URL de CardMarket usando el ID de la carta
+    // One Piece usa el formato: https://www.cardmarket.com/en/OnePiece/Products/Singles/SETNAME/CARDNAME
+    const cardId = encodeURIComponent(card.card_set_id);
+    const cardName = encodeURIComponent(card.card_name);
+    const url = `https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${cardId}`;
+    window.open(url, '_blank');
+  }
+
   getCardQuantity(cardId: string): number {
     return this.collection.get(cardId)?.quantity || 0;
   }
