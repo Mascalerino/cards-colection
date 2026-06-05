@@ -1,0 +1,112 @@
+{
+  "series": [
+    {
+      "id": "NR",
+      "name": "Naruto Collection KAYOU NR",
+      "box": "T1W1, T1W2, T1W3, T1W4, T2W1, T2W2, T2W3, T2W4, T2W5, T2W6, T2.5, T3W1, T3W2, T3W3, T3W4, T3W5, T4W1, T4W2, T4W3, T4W4, T4W5",
+      "rarities": [
+        { "code": "SE", "start": 1, "end": 6 },
+        { "code": "CP", "start": 1, "end": 10 },
+        { "code": "SLR", "start": 1, "end": 12 },
+        { "code": "CR", "start": 1, "end": 22 },
+        { "code": "NR", "start": 1, "end": 23 },
+        { "code": "GP", "start": 1, "end": 24 },
+        { "code": "BP", "start": 1, "end": 27 },
+        { "code": "ZR", "start": 1, "end": 36 },
+        { "code": "TGR", "start": 1, "end": 44 },
+        { "code": "SLR+", "start": 11, "end": 60 },
+        { "code": "SLR-", "start": 11, "end": 60 },
+        { "code": "PR", "start": 1, "end": 62 },
+        { "code": "TR", "start": 1, "end": 62 },
+        { "code": "MR", "start": 1, "end": 62 },
+        { "code": "AR", "start": 1, "end": 66 },
+        { "code": "SP", "start": 1, "end": 69 },
+        { "code": "OR", "start": 1, "end": 106 },
+        { "code": "UR", "start": 1, "end": 114 },
+        { "code": "SSR", "start": 1, "end": 130 },
+        { "code": "SR", "start": 1, "end": 108 },
+        { "code": "R", "start": 1, "end": 110 },
+        { "code": "HR", "start": 1, "end": 200 }
+      ]
+    },
+    {
+      "id": "NRZ06",
+      "name": "Naruto Collection KAYOU Z06",
+      "box": "T4W6",
+      "rarities": [
+        { "code": "SE", "start": 13, "end": 16 },
+        { "code": "BP", "start": 28, "end": 34 },
+        { "code": "MR", "start": 63, "end": 68 },
+        { "code": "SP", "start": 70, "end": 73 },
+        { "code": "UR", "start": 115, "end": 129 },
+        { "code": "PU", "start": 1, "end": 8 },
+        { "code": "PTR", "start": 1, "end": 20 },
+        { "code": "SSR", "start": 131, "end": 154 },
+        { "code": "SR", "start": 109, "end": 128 },
+        { "code": "R", "start": 111, "end": 160 }
+      ]
+    },
+    {
+      "id": "NRZ07",
+      "name": "Naruto Collection KAYOU Z07",
+      "box": "T4W7",
+      "rarities": [
+        { "code": "SE", "start": 1, "end": 4 },
+        { "code": "BP", "start": 1, "end": 7 },
+        { "code": "MR", "start": 1, "end": 7 },
+        { "code": "SP", "start": 1, "end": 4 },
+        { "code": "AR", "start": 1, "end": 10 },
+        { "code": "UR", "start": 1, "end": 15 },
+        { "code": "PU", "start": 1, "end": 8 },
+        { "code": "PTR", "start": 1, "end": 20 },
+        { "code": "SSR", "start": 1, "end": 23 },
+        { "code": "SR", "start": 1, "end": 20 },
+        { "code": "R", "start": 1, "end": 50 }
+      ]
+    },
+    {
+      "id": "NRB07",
+      "name": "Naruto Collection KAYOU B07",
+      "box": "T2W7",
+      "rarities": [
+        { "code": "CR", "start": 23, "end": 26 },
+        { "code": "SP", "start": 74, "end": 77 },
+        { "code": "MR", "start": 69, "end": 72 },
+        { "code": "UR", "start": 130, "end": 144 },
+        { "code": "SSR", "start": 155, "end": 179 },
+        { "code": "SR", "start": 129, "end": 148 },
+        { "code": "R", "start": 161, "end": 210 }
+      ]
+    },
+    {
+      "id": "NRB08",
+      "name": "Naruto Collection KAYOU B08",
+      "box": "T2W8",
+      "rarities": [
+        { "code": "CR", "start": 1, "end": 4 },
+        { "code": "SP", "start": 1, "end": 4 },
+        { "code": "AR", "start": 1, "end": 10 },
+        { "code": "MR", "start": 1, "end": 4 },
+        { "code": "UR", "start": 1, "end": 15 },
+        { "code": "SSR", "start": 1, "end": 24 },
+        { "code": "SR", "start": 1, "end": 20 },
+        { "code": "R", "start": 1, "end": 50 }
+      ]
+    },
+    {
+      "id": "NRB09",
+      "name": "Naruto Collection KAYOU B09",
+      "box": "T2W9",
+      "rarities": [
+        { "code": "CR", "start": 1, "end": 4 },
+        { "code": "AR", "start": 1, "end": 10 },
+        { "code": "MR", "start": 1, "end": 4 },
+        { "code": "URX", "start": 1, "end": 4 },
+        { "code": "UR", "start": 1, "end": 15 },
+        { "code": "SSR", "start": 1, "end": 25 },
+        { "code": "SR", "start": 1, "end": 20 },
+        { "code": "R", "start": 1, "end": 50 }
+      ]
+    }
+  ]
+}

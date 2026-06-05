@@ -1,0 +1,4 @@
+<div class="card-checkbox-item">
+  <span class="card-code" (click)="onCodeClick()">{{ cardCode }}</span>
+  <mat-checkbox [(ngModel)]="isOwned" (change)="onToggle()" color="primary"> </mat-checkbox>
+</div>

@@ -1,0 +1,109 @@
+<div class="set-detail-container">
+  <button mat-icon-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  <button
+    mat-raised-button
+    class="sell-cards-button"
+    color="accent"
+    (click)="openSellCardsDialog()"
+    *ngIf="collection.size > 0"
+  >
+    <mat-icon>sell</mat-icon>
+    Venta de cartas
+  </button>
+
+  <button
+    mat-raised-button
+    class="delete-collection-button"
+    (click)="deleteCollection()"
+    *ngIf="collection.size > 0"
+  >
+    <mat-icon>delete</mat-icon>
+    Eliminar colección
+  </button>
+
+  <button
+    mat-raised-button
+    class="csv-export-button"
+    (click)="exportDuplicatesToCSV()"
+    *ngIf="collection.size > 0"
+  >
+    <mat-icon>file_download</mat-icon>
+    CSV tvgpowertools
+  </button>
+
+  <div class="set-header">
+    <h1>{{ set?.name || 'Cargando...' }}</h1>
+    <app-progress-stats [current]="set?.ownedCards || 0" [total]="set?.totalCards || 0">
+    </app-progress-stats>
+    <div class="collection-value" *ngIf="collectionTotalValue > 0">
+      <span class="value-label">Valor total:</span>
+      <span class="value-item total">{{ collectionTotalValue.toFixed(2) }}€</span>
+      <span class="value-item foil" *ngIf="collectionFoilTotal > 0">
+        {{ collectionFoilTotal.toFixed(2) }}€
+      </span>
+      <span class="value-item nonfoil" *ngIf="collectionNonfoilTotal > 0">
+        {{ collectionNonfoilTotal.toFixed(2) }}€
+      </span>
+    </div>
+  </div>
+
+  <div class="filters-section">
+    <app-card-search
+      [showVariantFilters]="true"
+      [filteredCount]="filteredCards.length"
+      [totalCount]="set?.totalCards || 0"
+      (searchChange)="onSearchChange($event)"
+      (filterChange)="onFilterChange($event)"
+      (variantFilterChange)="onVariantFilterChange($event)"
+    >
+    </app-card-search>
+  </div>
+
+  <div class="cards-grid">
+    <div class="no-cards" *ngIf="filteredCards.length === 0">
+      <p>No se encontraron cartas</p>
+    </div>
+
+    <div class="card-item" *ngFor="let card of filteredCards">
+      <div class="card-image-container" (click)="openCardMarket(card, $event)">
+        <img
+          [src]="card.image_uris?.normal || 'assets/placeholder-card.png'"
+          [alt]="card.name"
+          class="card-image"
+        />
+        <div class="card-collector-number">#{{ card.collector_number }}</div>
+        <div class="collection-badge" *ngIf="card.inCollection">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-prices" *ngIf="card.prices">
+          <span class="price-item foil" *ngIf="card.foil && card.prices.eur_foil">
+            {{ card.prices.eur_foil }}€
+          </span>
+          <span class="price-item nonfoil" *ngIf="card.nonfoil && card.prices.eur">
+            {{ card.prices.eur }}€
+          </span>
+        </div>
+        <h3>{{ card.name }}</h3>
+        <app-card-collection-counter
+          [card]="card"
+          [foilCount]="getCardCount(card.id, 'foil')"
+          [nonfoilCount]="getCardCount(card.id, 'nonfoil')"
+          (addCard)="onAddCard(card, $event)"
+          (removeCard)="onRemoveCard(card, $event)"
+          (openDetail)="onOpenCardDetail(card)"
+        >
+        </app-card-collection-counter>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para volver arriba -->
+  <button mat-fab class="scroll-to-top" (click)="scrollToTop()" *ngIf="showScrollButton">
+    <mat-icon>arrow_upward</mat-icon>
+  </button>
+</div>

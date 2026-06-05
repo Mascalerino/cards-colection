@@ -1,0 +1,10 @@
+<div class="magic-collections-container">
+  <button mat-icon-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  <h1>Colecciones de Magic: The Gathering</h1>
+  <p class="subtitle">Selecciona un set para ver tu colección</p>
+
+  <app-set-list [sets]="magicSets" (setClicked)="onSetClick($event)"></app-set-list>
+</div>

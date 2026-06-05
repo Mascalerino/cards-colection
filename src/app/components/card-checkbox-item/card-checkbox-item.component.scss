@@ -1,0 +1,40 @@
+.card-checkbox-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  .card-code {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    cursor: pointer;
+    user-select: none;
+    flex: 1;
+
+    &:hover {
+      color: #0071e3;
+    }
+  }
+
+  mat-checkbox {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .card-checkbox-item {
+    padding: 6px 12px;
+
+    .card-code {
+      font-size: 12px;
+    }
+  }
+}

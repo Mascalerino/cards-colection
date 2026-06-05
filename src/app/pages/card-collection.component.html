@@ -1,0 +1,60 @@
+<div class="card-collection-container">
+  <h1>Bienvenido a tu Colección de Cartas</h1>
+  <p class="welcome-message">Organiza y gestiona tus colecciones de cartas coleccionables</p>
+
+  <div class="action-buttons">
+    <button mat-raised-button color="primary" (click)="exportCollections()">
+      <mat-icon>download</mat-icon>
+      Exportar colecciones
+    </button>
+    <button mat-raised-button color="accent" (click)="importFile.click()">
+      <mat-icon>upload</mat-icon>
+      Importar colecciones
+    </button>
+    <input
+      #importFile
+      type="file"
+      accept=".json"
+      (change)="importCollections($event)"
+      style="display: none"
+    />
+  </div>
+
+  <div class="collections-wrapper">
+    <div class="collection-card" (click)="navigateToPokemon()">
+      <img
+        ngSrc="assets/logos/logo-pokemon.webp"
+        alt="Pokémon Logo"
+        width="330"
+        height="169"
+        priority
+        class="collection-logo"
+      />
+      <h2>Pokémon</h2>
+    </div>
+
+    <div class="collection-card" (click)="navigateToMagic()">
+      <img
+        ngSrc="assets/logos/logo-magic.webp"
+        alt="Magic"
+        width="500"
+        height="325"
+        priority
+        class="collection-logo"
+      />
+      <h2>Magic</h2>
+    </div>
+
+    <div class="collection-card" (click)="navigateToNaruto()">
+      <img
+        ngSrc="assets/logos/logo-naruto.webp"
+        alt="Naruto"
+        width="400"
+        height="250"
+        priority
+        class="collection-logo"
+      />
+      <h2>Naruto</h2>
+    </div>
+  </div>
+</div>

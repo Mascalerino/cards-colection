@@ -1,0 +1,36 @@
+<div class="naruto-collections-container">
+  <button mat-icon-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  <div class="pdf-buttons-container">
+    <button
+      mat-raised-button
+      class="export-pdf-button"
+      color="accent"
+      (click)="exportMissingCardsPDF()"
+    >
+      <mat-icon>picture_as_pdf</mat-icon>
+      Exportar cartas faltantes (PDF)
+    </button>
+
+    <button
+      mat-raised-button
+      class="export-pdf-button"
+      color="primary"
+      (click)="exportAllCardsPDF()"
+    >
+      <mat-icon>list_alt</mat-icon>
+      Exportar listado completo (PDF)
+    </button>
+  </div>
+
+  <h1>Colecciones de Naruto</h1>
+  <p class="subtitle">Selecciona una serie para ver tu colección</p>
+
+  <app-set-list
+    [sets]="narutoSets"
+    [showCardMarket]="false"
+    (setClicked)="onSetClick($event)"
+  ></app-set-list>
+</div>

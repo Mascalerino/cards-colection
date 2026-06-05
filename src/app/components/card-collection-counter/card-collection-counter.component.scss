@@ -1,0 +1,141 @@
+.collection-counter {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+
+  .counter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    position: relative;
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+
+    .card-icons {
+      display: flex;
+      gap: 0.25rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .card-icon {
+        width: 20px;
+        height: 20px;
+        color: #d1d1d6;
+        transition: color 0.2s ease;
+
+        &.foil.has-cards {
+          color: #ff9800;
+        }
+
+        &.nonfoil.has-cards {
+          color: #0071e3;
+        }
+      }
+    }
+
+    .counter-btn {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &.minus {
+        color: #d32f2f;
+      }
+
+      &.plus {
+        color: #2e7d32;
+      }
+
+      &.options {
+        color: #6e6e73;
+      }
+
+      &:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+    }
+
+    .count {
+      font-weight: 600;
+      min-width: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .plus-container {
+      position: relative;
+    }
+
+    .add-menu {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 0.25rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      overflow: hidden;
+      min-width: 150px;
+
+      .menu-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s ease;
+
+        &:hover {
+          background: #f5f5f7;
+        }
+
+        &.foil-option {
+          color: #ff9800;
+          font-weight: 600;
+        }
+
+        &.nonfoil-option {
+          color: #0071e3;
+          font-weight: 600;
+        }
+
+        .count-badge {
+          background: #e8e8ed;
+          padding: 0.25rem 0.5rem;
+          border-radius: 12px;
+          font-size: 0.75rem;
+          min-width: 24px;
+          text-align: center;
+        }
+      }
+    }
+  }
+}
+
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: transparent;
+}

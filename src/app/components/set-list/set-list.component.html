@@ -1,0 +1,30 @@
+<div class="sets-list">
+  <div class="set-card" *ngFor="let set of sets" (click)="onSetClick(set)">
+    <div class="set-content">
+      <div class="set-text">
+        <h3>{{ set.name }}</h3>
+        <div class="set-info">
+          <div class="progress-container">
+            <div class="count-row">
+              <span class="card-count">{{ set.ownedCards }} / {{ set.totalCards }} cartas</span>
+              <span class="percentage">{{ getProgressPercentage(set) | number: '1.0-0' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getProgressPercentage(set)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <a
+        *ngIf="showCardMarket"
+        [href]="set.cardmarketUrl"
+        target="_blank"
+        class="cardmarket-link"
+        matTooltip="Ver en cardmarket"
+        (click)="$event.stopPropagation()"
+      >
+        <mat-icon>style</mat-icon>
+      </a>
+    </div>
+  </div>
+</div>

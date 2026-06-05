@@ -1,0 +1,44 @@
+.search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+
+  .search-field {
+    width: 100%;
+    max-width: 600px;
+  }
+
+  .filters-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-options {
+    display: flex;
+    align-items: center;
+
+    mat-radio-group {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    &.variant-filters {
+      mat-checkbox {
+        margin: 0 0.5rem;
+      }
+    }
+  }
+
+  .results-count {
+    color: #6e6e73;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: center;
+  }
+}

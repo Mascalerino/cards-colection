@@ -1,0 +1,59 @@
+<div class="dialog-container">
+  <h2 mat-dialog-title>Añadir {{ cardTitle }}</h2>
+
+  <mat-dialog-content>
+    <div class="form-section">
+      <label class="form-label">Cantidad *</label>
+      <div class="quantity-control">
+        <button mat-icon-button (click)="decrementQuantity()" [disabled]="quantity <= 1">
+          <mat-icon>remove</mat-icon>
+        </button>
+        <input type="number" [(ngModel)]="quantity" min="1" class="quantity-input" />
+        <button mat-icon-button (click)="incrementQuantity()">
+          <mat-icon>add</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">Tipo de carta *</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select [(ngModel)]="variant">
+          <mat-option value="foil">Foil</mat-option>
+          <mat-option value="nonfoil">No Foil</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">Idioma de la carta *</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select [(ngModel)]="language">
+          <mat-option *ngFor="let lang of languages" [value]="lang.value">
+            {{ lang.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">Condición de la carta *</label>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-select [(ngModel)]="condition">
+          <mat-option *ngFor="let cond of conditions" [value]="cond">
+            {{ cond }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="form-section">
+      <mat-checkbox [(ngModel)]="addAnother">Añadir otra entrada después de esto</mat-checkbox>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-footer">
+    <button mat-button class="cancel-btn" (click)="onCancel()">Cancelar</button>
+    <button mat-raised-button class="add-btn" (click)="onAdd()">Añadir a la colección</button>
+  </mat-dialog-actions>
+</div>

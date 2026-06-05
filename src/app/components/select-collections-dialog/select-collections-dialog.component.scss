@@ -1,0 +1,116 @@
+.select-collections-dialog {
+  min-width: 400px;
+  max-width: 600px;
+
+  h2 {
+    color: #333;
+    margin: 0;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  mat-dialog-content {
+    padding: 1.5rem;
+    max-height: 60vh;
+    overflow-y: auto;
+
+    .select-all-section {
+      padding: 1rem;
+      background-color: #f5f5f7;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+
+      mat-checkbox {
+        font-size: 1rem;
+      }
+    }
+
+    mat-divider {
+      margin: 1rem 0;
+    }
+
+    .collections-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .collection-item {
+        padding: 0.75rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background-color: #f9f9f9;
+          border-color: #ff6b35;
+        }
+
+        mat-checkbox {
+          width: 100%;
+
+          .collection-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+
+            .collection-name {
+              font-weight: 500;
+              color: #333;
+            }
+
+            .collection-box {
+              font-size: 0.85rem;
+              color: #666;
+              font-style: italic;
+            }
+          }
+        }
+      }
+    }
+
+    .selection-summary {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background-color: #e3f2fd;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #1976d2;
+      font-weight: 500;
+
+      mat-icon {
+        color: #1976d2;
+      }
+    }
+  }
+
+  mat-dialog-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    justify-content: flex-end;
+    gap: 1rem;
+
+    button {
+      min-width: 120px;
+
+      &[color='primary'] {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .select-collections-dialog {
+    min-width: 100%;
+    max-width: 100%;
+
+    mat-dialog-content {
+      padding: 1rem;
+    }
+  }
+}

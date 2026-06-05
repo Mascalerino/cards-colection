@@ -1,0 +1,46 @@
+<div class="select-collections-dialog">
+  <h2 mat-dialog-title>Seleccionar Colecciones para PDF</h2>
+
+  <mat-dialog-content>
+    <div class="select-all-section">
+      <mat-checkbox [(ngModel)]="selectAll" (change)="onSelectAllChange()" color="primary">
+        <strong>Seleccionar Todas</strong>
+      </mat-checkbox>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <div class="collections-list">
+      <div class="collection-item" *ngFor="let series of series; let i = index">
+        <mat-checkbox
+          [(ngModel)]="selectedSeries[i]"
+          (change)="onSelectionChange()"
+          color="primary"
+        >
+          <div class="collection-info">
+            <span class="collection-name">{{ series.name }}</span>
+            <span class="collection-box" *ngIf="series.box">({{ series.box }})</span>
+          </div>
+        </mat-checkbox>
+      </div>
+    </div>
+
+    <div class="selection-summary" *ngIf="getSelectedCount() > 0">
+      <mat-icon>info</mat-icon>
+      <span>{{ getSelectedCount() }} colección(es) seleccionada(s)</span>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="cancel()">Cancelar</button>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="confirm()"
+      [disabled]="getSelectedCount() === 0"
+    >
+      <mat-icon>picture_as_pdf</mat-icon>
+      Generar PDF
+    </button>
+  </mat-dialog-actions>
+</div>

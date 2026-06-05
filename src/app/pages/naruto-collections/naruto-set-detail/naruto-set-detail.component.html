@@ -1,0 +1,88 @@
+<div class="naruto-set-detail-container">
+  <button mat-icon-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+
+  <button
+    mat-raised-button
+    class="delete-collection-button"
+    color="warn"
+    (click)="deleteCollection()"
+    *ngIf="collection.size > 0"
+  >
+    <mat-icon>delete</mat-icon>
+    Eliminar colección
+  </button>
+
+  <div class="series-header">
+    <h1>{{ series?.name || 'Cargando...' }}</h1>
+    <p class="series-id">
+      {{ series?.id }}
+      <span *ngIf="series && series.box" class="series-box"> - {{ series.box }}</span>
+    </p>
+
+    <div class="total-progress" *ngIf="series">
+      <app-progress-stats
+        [current]="getTotalProgress().owned"
+        [total]="getTotalProgress().total"
+      ></app-progress-stats>
+    </div>
+  </div>
+
+  <div class="rarities-container">
+    <mat-accordion *ngIf="series" [multi]="false">
+      <mat-expansion-panel *ngFor="let rarity of series.rarities">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="rarity-code">{{ rarity.code }}</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            <span class="rarity-progress"
+              >{{ getRarityProgress(rarity).owned }} / {{ getRarityProgress(rarity).total }}
+            </span>
+            <span class="rarity-percentage"
+              >{{ getRarityProgress(rarity).percentage.toFixed(1) }}%</span
+            >
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="cards-list">
+          <div class="search-container">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Buscar por número</mat-label>
+              <input
+                matInput
+                [ngModel]="getSearchText(rarity.code)"
+                (ngModelChange)="setSearchText(rarity.code, $event)"
+                placeholder="Ej: 001, 042"
+                autocomplete="off"
+              />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+          </div>
+          <div class="complete-toggle">
+            <span class="toggle-label">Marcar completado</span>
+            <mat-checkbox
+              [checked]="isRarityComplete(rarity)"
+              (change)="toggleCompleteRarity(rarity)"
+              color="primary"
+            >
+            </mat-checkbox>
+          </div>
+          <div
+            class="no-results"
+            *ngIf="getFilteredCards(rarity).length === 0 && getSearchText(rarity.code)"
+          >
+            <p>No se encontraron cartas con el número "{{ getSearchText(rarity.code) }}"</p>
+          </div>
+          <app-card-checkbox-item
+            *ngFor="let card of getFilteredCards(rarity)"
+            [cardCode]="card.code"
+            [isOwned]="card.isOwned"
+            (toggleOwned)="onCardToggle($event)"
+          ></app-card-checkbox-item>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+</div>
