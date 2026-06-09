@@ -22,7 +22,7 @@ El proxy (`proxy.conf.json`) está configurado en `angular.json`, así que `npm 
 
 ## Arquitectura general
 
-Aplicación Angular 22 con **componentes standalone** (sin módulos NgModule). Todos los componentes usan `ChangeDetectionStrategy.Eager` y se cargan de forma **lazy** mediante `loadComponent` en el router.
+Aplicación Angular 19 con **componentes standalone** (sin módulos NgModule). Todos los componentes usan `ChangeDetectionStrategy.Eager` y se cargan de forma **lazy** mediante `loadComponent` en el router.
 
 ### Rutas y páginas
 
