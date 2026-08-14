@@ -14,7 +14,7 @@ import { CardSearchComponent } from '@components/card-search/card-search.compone
   standalone: true,
   imports: [CommonModule, FormsModule, MatButtonModule, MatIconModule, ProgressStatsComponent, CardSearchComponent],
   templateUrl: './one-piece-set-detail.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './one-piece-set-detail.component.scss',
 })
 export class OnePieceSetDetailComponent implements OnInit {

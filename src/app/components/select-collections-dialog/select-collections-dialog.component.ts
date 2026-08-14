@@ -34,7 +34,7 @@ export interface SelectCollectionsDialogData {
     MatDividerModule
 ],
   templateUrl: './select-collections-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './select-collections-dialog.component.scss',
 })
 export class SelectCollectionsDialogComponent {

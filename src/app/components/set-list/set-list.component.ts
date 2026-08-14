@@ -9,7 +9,7 @@ import { CardSet } from '@models/card-set.model';
   standalone: true,
   imports: [CommonModule, MatIconModule, MatTooltipModule],
   templateUrl: './set-list.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './set-list.component.scss',
 })
 export class SetListComponent {

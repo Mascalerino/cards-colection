@@ -11,7 +11,7 @@ import { SetListComponent } from '@components/set-list/set-list.component';
   standalone: true,
   imports: [SetListComponent, MatButtonModule, MatIconModule],
   templateUrl: './pokemon-collections.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './pokemon-collections.component.scss',
 })
 export class PokemonCollectionsComponent implements OnInit {

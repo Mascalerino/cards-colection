@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, MatButtonModule, MatIconModule, MatTabsModule],
   templateUrl: './one-piece-collections.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './one-piece-collections.component.scss',
 })
 export class OnePieceCollectionsComponent implements OnInit {

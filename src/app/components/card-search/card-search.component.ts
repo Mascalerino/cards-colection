@@ -24,7 +24,7 @@ export interface FilterOption {
     MatCheckboxModule
 ],
   templateUrl: './card-search.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './card-search.component.scss',
 })
 export class CardSearchComponent {

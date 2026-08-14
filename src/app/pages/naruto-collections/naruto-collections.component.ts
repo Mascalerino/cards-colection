@@ -25,7 +25,7 @@ interface NarutoSeries {
   standalone: true,
   imports: [MatButtonModule, MatIconModule, SetListComponent],
   templateUrl: './naruto-collections.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './naruto-collections.component.scss',
 })
 export class NarutoCollectionsComponent implements OnInit {

@@ -10,7 +10,7 @@ import { CardVariant } from '@models/card-entry.model';
   standalone: true,
   imports: [MatIconModule, MatButtonModule],
   templateUrl: './card-collection-counter.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './card-collection-counter.component.scss',
 })
 export class CardCollectionCounterComponent {

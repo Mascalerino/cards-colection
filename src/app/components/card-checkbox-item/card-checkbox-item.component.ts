@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [MatCheckboxModule, FormsModule],
   templateUrl: './card-checkbox-item.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './card-checkbox-item.component.scss',
 })
 export class CardCheckboxItemComponent {

@@ -45,7 +45,7 @@ interface NarutoSeries {
     ProgressStatsComponent
 ],
   templateUrl: './naruto-set-detail.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './naruto-set-detail.component.scss',
 })
 export class NarutoSetDetailComponent implements OnInit {

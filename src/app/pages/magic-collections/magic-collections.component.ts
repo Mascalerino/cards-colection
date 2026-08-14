@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule, SetListComponent, MatButtonModule, MatIconModule],
   templateUrl: './magic-collections.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './magic-collections.component.scss',
 })
 export class MagicCollectionsComponent implements OnInit {

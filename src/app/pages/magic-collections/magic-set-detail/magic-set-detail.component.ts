@@ -36,7 +36,7 @@ type FilterType = 'all' | 'inCollection' | 'notInCollection';
     CardCollectionCounterComponent
 ],
   templateUrl: './magic-set-detail.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './magic-set-detail.component.scss',
 })
 export class MagicSetDetailComponent implements OnInit, OnDestroy {

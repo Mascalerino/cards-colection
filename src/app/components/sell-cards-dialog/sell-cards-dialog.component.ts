@@ -33,7 +33,7 @@ export interface SellCardsDialogData {
     MatInputModule
 ],
   templateUrl: './sell-cards-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './sell-cards-dialog.component.scss',
 })
 export class SellCardsDialogComponent implements OnInit {

@@ -33,7 +33,7 @@ interface DisplayEntry extends CardEntry {
     MatTooltipModule
 ],
   templateUrl: './card-detail-panel.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './card-detail-panel.component.scss',
 })
 export class CardDetailPanelComponent implements OnInit {

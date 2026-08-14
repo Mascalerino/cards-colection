@@ -35,7 +35,7 @@ export interface AddCardDialogData {
     MatIconModule
 ],
   templateUrl: './add-card-dialog.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './add-card-dialog.component.scss',
 })
 export class AddCardDialogComponent {
