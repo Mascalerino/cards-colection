@@ -90,7 +90,15 @@ async function seedSets(game: Game) {
   }
 
   if (rows.length === 0) return [];
-  return db.insert(cardSets).values(rows).returning();
+
+  // onConflictDoNothing: si dos peticiones concurrentes siembran el mismo juego a la vez
+  // (p. ej. la lista de sets pidiendo varios en paralelo), la segunda no debe fallar.
+  await db
+    .insert(cardSets)
+    .values(rows)
+    .onConflictDoNothing({ target: [cardSets.game, cardSets.externalId] });
+
+  return db.select().from(cardSets).where(eq(cardSets.game, game));
 }
 
 /** Devuelve las cartas de un set, sembrando el catálogo si está vacío y refrescando precios caducados. */
@@ -177,7 +185,12 @@ async function seedCards(game: Game, set: typeof cardSets.$inferSelect) {
   // pokemon: sin catálogo de cartas individuales de momento (solo checklist de set)
 
   if (rows.length === 0) return [];
-  return db.insert(cards).values(rows).returning();
+
+  // onConflictDoNothing: evita fallos por condiciones de carrera (varias peticiones
+  // sembrando el mismo set a la vez) y por cartas que se repiten entre set y deck.
+  await db.insert(cards).values(rows).onConflictDoNothing({ target: [cards.game, cards.externalId] });
+
+  return db.select().from(cards).where(eq(cards.setId, set.id));
 }
 
 async function refreshPrices(game: Game, set: typeof cardSets.$inferSelect) {
