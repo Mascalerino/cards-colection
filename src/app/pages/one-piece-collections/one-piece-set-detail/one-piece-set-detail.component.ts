@@ -4,7 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { forkJoin, of } from 'rxjs';
 import { OnePieceService } from '../../../services/one-piece.service';
+import { CollectionApiService } from '../../../services/collection-api.service';
 import { OnePieceCard, OnePieceCardEntry } from '@models/one-piece-card.model';
 import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
 import { CardSearchComponent } from '@components/card-search/card-search.component';
@@ -25,12 +27,10 @@ export class OnePieceSetDetailComponent implements OnInit {
   collection: Map<string, OnePieceCardEntry> = new Map();
   loading = true;
 
-  // Filtros
   currentFilter: string = 'all';
   searchText: string = '';
   collectionTotalValue: number = 0;
 
-  // Filtros avanzados
   showAdvancedFilters: boolean = false;
   rarities: string[] = [];
   colors: string[] = [];
@@ -39,13 +39,13 @@ export class OnePieceSetDetailComponent implements OnInit {
   selectedColor: string | null = null;
   selectedType: string | null = null;
 
-  // Ordenamiento
   sortOrder: string = 'none';
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private onePieceService: OnePieceService
+    private onePieceService: OnePieceService,
+    private collectionApi: CollectionApiService,
   ) {}
 
   ngOnInit(): void {
@@ -67,20 +67,31 @@ export class OnePieceSetDetailComponent implements OnInit {
         this.filteredCards = cards;
         this.setName = cards[0]?.set_name || 'One Piece';
 
-        // Extraer valores únicos para filtros avanzados
         this.rarities = [...new Set(cards.map((c) => c.rarity))].sort();
         this.colors = [...new Set(cards.map((c) => c.card_color))].sort();
         this.types = [...new Set(cards.map((c) => c.card_type))].sort();
 
-        // Cargar colección desde localStorage
-        this.collection = this.onePieceService.loadCollection(this.setId);
-        
+        this.loadCollection();
+      },
+      error: (error) => {
+        console.error('Error al cargar las cartas:', error);
+        this.loading = false;
+      },
+    });
+  }
+
+  private loadCollection(): void {
+    this.collectionApi.getCollection('onepiece', this.setId).subscribe({
+      next: (entries) => {
+        this.collection = new Map(
+          entries.map((e) => [e.cardId, { cardId: e.cardId, quantity: e.quantity }]),
+        );
         this.calculateCollectionValue();
         this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error al cargar las cartas:', error);
+        console.error('Error al cargar la colección:', error);
         this.loading = false;
       },
     });
@@ -111,16 +122,13 @@ export class OnePieceSetDetailComponent implements OnInit {
       const quantity = this.getCardQuantity(card.card_set_id);
       const inCollection = quantity > 0;
 
-      // Filtro de colección
       if (this.currentFilter === 'inCollection' && !inCollection) return false;
       if (this.currentFilter === 'notInCollection' && inCollection) return false;
 
-      // Filtro de búsqueda
-      const matchesSearch = !this.searchText || 
+      const matchesSearch = !this.searchText ||
         card.card_name.toLowerCase().includes(this.searchText.toLowerCase()) ||
         card.card_set_id.toLowerCase().includes(this.searchText.toLowerCase());
 
-      // Filtros avanzados
       const matchesRarity = !this.selectedRarity || card.rarity === this.selectedRarity;
       const matchesColor = !this.selectedColor || card.card_color === this.selectedColor;
       const matchesType = !this.selectedType || card.card_type === this.selectedType;
@@ -128,7 +136,6 @@ export class OnePieceSetDetailComponent implements OnInit {
       return matchesSearch && matchesRarity && matchesColor && matchesType;
     });
 
-    // Aplicar ordenamiento
     this.applySorting();
   }
 
@@ -140,35 +147,18 @@ export class OnePieceSetDetailComponent implements OnInit {
   applySorting(): void {
     switch (this.sortOrder) {
       case 'cardNumberAsc':
-        this.filteredCards.sort((a, b) => {
-          const numA = this.extractCardNumber(a.card_set_id);
-          const numB = this.extractCardNumber(b.card_set_id);
-          return numA - numB;
-        });
+        this.filteredCards.sort((a, b) => this.extractCardNumber(a.card_set_id) - this.extractCardNumber(b.card_set_id));
         break;
       case 'cardNumberDesc':
-        this.filteredCards.sort((a, b) => {
-          const numA = this.extractCardNumber(a.card_set_id);
-          const numB = this.extractCardNumber(b.card_set_id);
-          return numB - numA;
-        });
+        this.filteredCards.sort((a, b) => this.extractCardNumber(b.card_set_id) - this.extractCardNumber(a.card_set_id));
         break;
       case 'priceAsc':
-        this.filteredCards.sort((a, b) => {
-          const priceA = a.market_price || 0;
-          const priceB = b.market_price || 0;
-          return priceA - priceB;
-        });
+        this.filteredCards.sort((a, b) => (a.market_price || 0) - (b.market_price || 0));
         break;
       case 'priceDesc':
-        this.filteredCards.sort((a, b) => {
-          const priceA = a.market_price || 0;
-          const priceB = b.market_price || 0;
-          return priceB - priceA;
-        });
+        this.filteredCards.sort((a, b) => (b.market_price || 0) - (a.market_price || 0));
         break;
       default:
-        // Sin ordenamiento específico
         break;
     }
   }
@@ -190,21 +180,22 @@ export class OnePieceSetDetailComponent implements OnInit {
   }
 
   deleteCollection(): void {
-    if (confirm('¿Estás seguro de que quieres eliminar toda la colección de este set?')) {
-      this.onePieceService.clearCollection(this.setId);
+    if (!confirm('¿Estás seguro de que quieres eliminar toda la colección de este set?')) return;
+
+    const requests = Array.from(this.collection.keys()).map((cardId) =>
+      this.collectionApi.deleteEntry('onepiece', this.setId, cardId),
+    );
+
+    (requests.length ? forkJoin(requests) : of([])).subscribe(() => {
       this.collection = new Map();
       this.calculateCollectionValue();
       this.applyFilters();
-    }
+    });
   }
 
   openCardMarket(card: OnePieceCard, event: Event): void {
     event.stopPropagation();
-
-    // Crear URL de CardMarket usando el ID de la carta
-    // One Piece usa el formato: https://www.cardmarket.com/en/OnePiece/Products/Singles/SETNAME/CARDNAME
     const cardId = encodeURIComponent(card.card_set_id);
-    const cardName = encodeURIComponent(card.card_name);
     const url = `https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${cardId}`;
     window.open(url, '_blank');
   }
@@ -214,17 +205,29 @@ export class OnePieceSetDetailComponent implements OnInit {
   }
 
   addCard(card: OnePieceCard): void {
-    this.onePieceService.addCard(this.setId, card.card_set_id);
-    this.collection = this.onePieceService.loadCollection(this.setId);
-    this.calculateCollectionValue();
-    this.applyFilters();
+    const newQuantity = this.getCardQuantity(card.card_set_id) + 1;
+    this.collectionApi
+      .upsertEntry('onepiece', this.setId, card.card_set_id, { quantity: newQuantity })
+      .subscribe(() => {
+        this.collection.set(card.card_set_id, { cardId: card.card_set_id, quantity: newQuantity });
+        this.calculateCollectionValue();
+        this.applyFilters();
+      });
   }
 
   removeCard(card: OnePieceCard): void {
-    this.onePieceService.removeCard(this.setId, card.card_set_id);
-    this.collection = this.onePieceService.loadCollection(this.setId);
-    this.calculateCollectionValue();
-    this.applyFilters();
+    const newQuantity = this.getCardQuantity(card.card_set_id) - 1;
+    this.collectionApi
+      .upsertEntry('onepiece', this.setId, card.card_set_id, { quantity: newQuantity })
+      .subscribe(() => {
+        if (newQuantity > 0) {
+          this.collection.set(card.card_set_id, { cardId: card.card_set_id, quantity: newQuantity });
+        } else {
+          this.collection.delete(card.card_set_id);
+        }
+        this.calculateCollectionValue();
+        this.applyFilters();
+      });
   }
 
   getTotalOwned(): number {

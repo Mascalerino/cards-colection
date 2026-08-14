@@ -2,10 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Arquitectura general
+
+Aplicación de dos partes:
+
+- **Frontend** (`/`): Angular 19 con **componentes standalone** (sin NgModules), `ChangeDetectionStrategy.Default`, rutas cargadas de forma **lazy** vía `loadComponent`.
+- **Backend** (`/backend`): API REST en Express + TypeScript, con Postgres (Drizzle ORM) como base de datos. Gestiona autenticación, el catálogo de cartas (sembrado desde JSON local o APIs externas) y la colección de cada usuario.
+
+Todo el estado del usuario (colecciones, ventas) vive en la base de datos, **no en localStorage**. El frontend nunca llama directamente a Scryfall/optcgapi: siempre pasa por el backend, que hace de caché con TTL de 7 días.
+
 ## Comandos principales
 
+### Frontend
+
 ```bash
-# Servidor de desarrollo (proxy incluido via angular.json)
+# Servidor de desarrollo (proxy /api -> backend, ver proxy.conf.json)
 npm start
 
 # Build de producción
@@ -18,69 +29,121 @@ npm test
 ng generate component components/nombre-componente --standalone
 ```
 
-El proxy (`proxy.conf.json`) está configurado en `angular.json`, así que `npm start` ya lo incluye. Las peticiones a `/api` se redirigen a `https://optcgapi.com` para evitar CORS en One Piece.
+### Backend (`cd backend`)
 
-## Arquitectura general
+```bash
+npm run dev          # servidor con recarga (tsx watch)
+npm run build         # compila a dist/
+npm run db:generate   # genera una migración nueva a partir de src/db/schema.ts
+npm run db:migrate    # aplica migraciones pendientes
+npm run create-user -- --username <u> --password <p>  # crea un usuario (no hay registro público)
+```
 
-Aplicación Angular 19 con **componentes standalone** (sin módulos NgModule). Todos los componentes usan `ChangeDetectionStrategy.Default` y se cargan de forma **lazy** mediante `loadComponent` en el router.
+### Docker (stack completo)
+
+```bash
+cp .env.example .env   # ajustar DB_PASSWORD, JWT_SECRET, etc.
+docker compose up -d --build
+docker compose exec backend node dist/scripts/create-user.js -- --username admin --password ...
+```
+
+Ver `README-ES.md` para el detalle de despliegue (pensado para TrueNAS).
+
+## Frontend
 
 ### Rutas y páginas
 
+Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la sesión contra `GET /api/auth/me`).
+
 | Ruta | Componente | Datos |
 |---|---|---|
+| `/login` | `LoginComponent` | — |
 | `/` | `CardCollectionComponent` | Menú principal + export/import |
-| `/magic` | `MagicCollectionsComponent` | Lista de sets desde JSON local |
-| `/magic/:setId` | `MagicSetDetailComponent` | Cartas via Scryfall API |
-| `/pokemon` | `PokemonCollectionsComponent` | Sets desde JSON local |
-| `/naruto` | `NarutoCollectionsComponent` | Sets desde JSON local |
-| `/naruto/:seriesId` | `NarutoSetDetailComponent` | — |
-| `/onepiece` | `OnePieceCollectionsComponent` | Sets via optcgapi.com (caché) |
-| `/onepiece/:setId` | `OnePieceSetDetailComponent` | Cartas via optcgapi.com (caché) |
+| `/magic` | `MagicCollectionsComponent` | Sets vía `GET /api/magic/sets` |
+| `/magic/:setId` | `MagicSetDetailComponent` | Cartas vía `GET /api/magic/sets/:setId/cards` |
+| `/pokemon` | `PokemonCollectionsComponent` | Sets vía `GET /api/pokemon/sets` |
+| `/naruto` | `NarutoCollectionsComponent` | Series vía `GET /api/naruto/sets` |
+| `/naruto/:seriesId` | `NarutoSetDetailComponent` | Checklist generado a partir de `extra.rarities` |
+| `/onepiece` | `OnePieceCollectionsComponent` | Sets y decks vía `GET /api/onepiece/sets` |
+| `/onepiece/:setId` | `OnePieceSetDetailComponent` | Cartas vía `GET /api/onepiece/sets/:setId/cards` |
 
 ### Servicios
 
-- **`CardCollectionService`**: Gestiona Magic y Pokémon. Carga sets desde JSONs locales en `src/assets/card-collection/`. Obtiene cartas de Magic paginando la Scryfall API (`/cards/search`). El set `fin`/`finx` (Final Fantasy) tiene lógica especial para separar cartas por número de colección (≤309 = `fin`, ≥310 = `finx`).
+- **`AuthService`**: login/logout/me. El JWT viaja en una cookie httpOnly (nunca en localStorage ni en memoria expuesta a JS).
+- **`CollectionApiService`**: cliente genérico del catálogo (`sets`, `sets/:id/cards`) y de la colección del usuario (`collection/:setId`) para cualquier juego. Todos los `cardId` que expone son el **externalId** de la carta (id de Scryfall, `card_set_id` de One Piece, código `SERIE-RAREZA-NUM` de Naruto), nunca un uuid interno.
+- **`SalesApiService`**: ventas de Magic.
+- **`DataTransferApiService`**: `GET /api/export` / `POST /api/import`, mismo formato JSON que el histórico basado en localStorage.
+- **`CardCollectionService`**: mapea las respuestas del backend a los modelos `CardSet`/`Card` del frontend para Magic y Pokémon.
+- **`OnePieceService`**: igual que el anterior pero para One Piece (incluye distinguir sets de decks vía `extra.kind`).
 
-- **`OnePieceService`**: Accede a `optcgapi.com` a través del proxy `/api`. Implementa **caché en localStorage con TTL de 7 días** para todos los datos (sets, decks y cartas). Expone también métodos para gestionar la colección del usuario directamente (add/remove/clear).
-
-### Persistencia (localStorage)
-
-Toda la colección del usuario vive en localStorage. Claves por juego:
-
-| Prefijo | Juego |
-|---|---|
-| `collection_{setId}` | Magic: The Gathering |
-| `naruto_collection_{seriesId}` | Naruto |
-| `pokemon_collection_{setId}` | Pokémon |
-| `onepiece_collection_{setId}` | One Piece |
-| `ownedCards_{setId}` | Contador de cartas únicas (todos los juegos) |
-| `sales_{setId}` | Historial de ventas (Magic) |
-| `onepiece_all_sets` / `onepiece_all_decks` | Caché de listas de sets/decks |
-| `onepiece_cards_{setId}` | Caché de cartas de un set |
-
-La página principal permite **exportar e importar** todas las colecciones a/desde un archivo JSON. Al añadir un nuevo juego, hay que registrar su prefijo en `COLLECTION_PREFIXES` en `card-collection.component.ts`.
-
-### Modelos de datos
-
-- **Magic**: `Card` (con `foil`/`nonfoil`, `prices` en EUR, `cardmarket_id`). Las entradas de colección son `CardCollectionEntry` con arrays separados de `foilEntries` y `nonfoilEntries`, cada uno con idioma (`en`/`es`/`ja`), condición y cantidad. Esto permite exportar duplicados como CSV compatible con Cardmarket.
-- **One Piece**: `OnePieceCard` con `card_set_id` como identificador único (ej: `OP01-077`). La colección almacena `OnePieceCardEntry` con solo `cardId` y `quantity`.
+Interceptor `credentialsInterceptor`: añade `withCredentials` a toda petición a `environment.apiUrl` y redirige a `/login` en un 401.
 
 ### Alias de paths TypeScript
 
-Configurados en `tsconfig.json` para evitar rutas relativas largas:
-
 ```
-@models/*    → src/app/models/*
-@services/*  → src/app/services/*
-@components/* → src/app/components/*
-@pages/*     → src/app/pages/*
-@assets/*    → src/assets/*
+@models/*       → src/app/models/*
+@services/*     → src/app/services/*
+@components/*   → src/app/components/*
+@pages/*        → src/app/pages/*
+@assets/*       → src/assets/*
+@environments/* → src/environments/*
 ```
 
 ### Componentes compartidos
 
 En `src/app/components/`: `CardSearchComponent`, `ProgressStatsComponent`, `CardCollectionCounterComponent`, `CardDetailPanelComponent`, `AddCardDialogComponent`, `SellCardsDialogComponent`, `SetListComponent`, `CardCheckboxItemComponent`.
 
+## Backend (`/backend`)
+
+### Estructura
+
+```
+backend/src/
+├── config/          # env.ts, db.ts (conexión Drizzle/Postgres)
+├── db/
+│   ├── schema.ts     # tablas (users, card_sets, cards, user_collection_entries, card_sales)
+│   └── migrations/   # generadas con drizzle-kit
+├── middleware/       # auth.middleware.ts (JWT de cookie), error.middleware.ts
+├── modules/
+│   ├── auth/          # login/logout/me
+│   ├── cards/          # catálogo: sets + cartas, con providers por fuente
+│   │   └── providers/   # scryfall.provider.ts, optcgapi.provider.ts, local-json.provider.ts
+│   ├── collection/      # CRUD de la colección del usuario
+│   ├── sales/           # ventas (Magic)
+│   └── data-transfer/   # export/import
+└── scripts/create-user.ts
+```
+
+### Catálogo de cartas (`modules/cards`)
+
+`GET /api/:game/sets` y `GET /api/:game/sets/:setId/cards` siembran la BD la primera vez que se piden (desde JSON local para Pokémon/Naruto, o desde Scryfall/optcgapi para Magic/One Piece) y cachean precios con **TTL de 7 días** en `cards.pricesFetchedAt`. Los providers son intercambiables por juego; añadir un juego nuevo implica un provider nuevo y sus ramas en `cards.service.ts`.
+
+Peculiaridades de las APIs externas que hay que recordar:
+- Scryfall exige un `User-Agent` personalizado (si no, 400 `generic_user_agent`).
+- optcgapi: `allDecks` devuelve `structure_deck_id`/`structure_deck_name` (no `deck_id`/`deck_name`), y `decks/filtered/` exige pasar **tanto** `deck_id` como `set_id` (con el mismo valor) o responde 400.
+- Naruto no tiene catálogo externo: las cartas se generan a partir de los rangos `rarities` de `src/data/naruto-sets.json`, con el mismo formato de código que antes generaba el frontend (`SERIE-RAREZA-NUM`, 3 dígitos).
+- Pokémon solo tiene listado de sets (sin catálogo de cartas individuales todavía).
+- One Piece distingue **sets** de **decks** con `card_sets.extra.kind` (`'set'` | `'deck'`); ambos viven en la misma tabla bajo `game = 'onepiece'`.
+
+### Colección del usuario (`modules/collection`)
+
+`GET/PUT/DELETE /api/:game/collection/:setId[/:cardId]`. El `cardId` de la URL y de las respuestas es siempre el **externalId** de la carta (el backend traduce a/desde el uuid interno). `PUT` hace upsert por combinación de `variant`+`language`+`condition`; `quantity <= 0` borra la entrada.
+
+### Auth
+
+JWT en cookie httpOnly (`cc_token`, 30 días), sin registro público — los usuarios se crean con `npm run create-user`. Middleware `requireAuth` protege todo `/api/*` salvo `/api/auth/login`.
+
+### Modelos de datos
+
+- **Magic**: `Card` (con `foil`/`nonfoil`, `prices` en EUR, `cardmarket_id`). Las entradas de colección son `CardCollectionEntry` con `foilEntries`/`nonfoilEntries`, cada uno con idioma (`en`/`es`/`ja`), condición y cantidad — usado también para exportar duplicados a CSV compatible con Cardmarket.
+- **One Piece**: `OnePieceCard` con `card_set_id` como identificador único (ej. `OP01-077`).
+
 ### Datos estáticos
 
-Los sets de Magic, Pokémon y Naruto están definidos en JSONs en `src/assets/card-collection/`. Para añadir un nuevo set hay que editar directamente estos archivos.
+Los JSON de sets de Magic/Pokémon/Naruto viven **duplicados** en `src/assets/card-collection/` (legado, ya no se usan en runtime) y en `backend/src/data/` (fuente real usada para sembrar la BD). Para añadir o modificar un set hay que editar `backend/src/data/*.json`.
+
+## Docker
+
+- `Dockerfile` (raíz): build de Angular + nginx sirviendo `dist/cards-collection/browser`, con `nginx.conf` proxeando `/api/` al servicio `backend` (mismo origen desde el navegador, sin problemas de CORS ni de cookies cross-site).
+- `backend/Dockerfile`: build de Node, aplica migraciones automáticamente al arrancar el contenedor (`node dist/db/migrate.js && node dist/index.js`).
+- `docker-compose.yml`: orquesta `db` (Postgres), `backend` y `frontend`.

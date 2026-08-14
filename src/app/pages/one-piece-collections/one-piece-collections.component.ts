@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { OnePieceService } from '../../services/one-piece.service';
+import { CollectionApiService } from '../../services/collection-api.service';
 import { OnePieceSet, OnePieceDeck, OnePieceCard } from '@models/one-piece-card.model';
 import { CommonModule } from '@angular/common';
 
@@ -23,70 +24,53 @@ export class OnePieceCollectionsComponent implements OnInit {
 
   constructor(
     private onePieceService: OnePieceService,
+    private collectionApi: CollectionApiService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    // Cargar sets
     this.onePieceService.getAllSets().subscribe({
       next: (sets) => {
-        console.log('Sets de One Piece cargados:', sets);
         this.sets = sets;
-        
-        // Cargar el total de cartas y las cartas en colección para cada set
         this.sets.forEach((set) => {
-          // Cargar cartas para obtener el total
           this.onePieceService.getSetCards(set.set_id).subscribe({
             next: (cards) => {
               set.totalCards = cards.length;
-              this.calculateSetValue(set.set_id, cards);
+              this.calculateValue(set.set_id, set, cards);
             },
             error: (error) => {
               console.error(`Error al cargar cartas para ${set.set_name}:`, error);
               set.totalCards = 0;
             },
           });
-
-          // Cargar ownedCards desde localStorage
-          const ownedCards = localStorage.getItem(`ownedCards_onepiece_${set.set_id}`);
-          set.ownedCards = ownedCards ? parseInt(ownedCards, 10) : 0;
         });
       },
       error: (error) => {
         console.error('Error al cargar sets de One Piece:', error);
-        console.error('Detalles del error:', error.message, error.status);
       },
     });
 
-    // Cargar decks (independientemente de los sets)
     this.onePieceService.getAllDecks().subscribe({
       next: (decks) => {
         this.decks = decks;
-        
-        // Cargar el total de cartas y las cartas en colección para cada deck
         this.decks.forEach((deck) => {
-          // Cargar cartas para obtener el total
           this.onePieceService.getDeckCards(deck.deck_id).subscribe({
             next: (cards) => {
               deck.totalCards = cards.length;
-              this.calculateDeckValue(deck.deck_id, cards);
+              this.calculateValue(deck.deck_id, deck, cards);
             },
             error: (error) => {
               console.error(`Error al cargar cartas para ${deck.deck_name}:`, error);
               deck.totalCards = 0;
             },
           });
-
-          // Cargar ownedCards desde localStorage
-          const ownedCards = localStorage.getItem(`ownedCards_onepiece_${deck.deck_id}`);
-          deck.ownedCards = ownedCards ? parseInt(ownedCards, 10) : 0;
         });
       },
       error: (error) => {
         console.error('Error al cargar decks de One Piece:', error);
       },
     });
-    
+
     this.loading = false;
   }
 
@@ -107,32 +91,21 @@ export class OnePieceCollectionsComponent implements OnInit {
     return (item.ownedCards / item.totalCards) * 100;
   }
 
-  calculateSetValue(setId: string, cards: OnePieceCard[]): void {
-    const collection = this.onePieceService.loadCollection(setId);
-    let setTotal = 0;
+  private calculateValue(id: string, item: OnePieceSet | OnePieceDeck, cards: OnePieceCard[]): void {
+    this.collectionApi.getCollection('onepiece', id).subscribe({
+      next: (entries) => {
+        item.ownedCards = entries.filter((e) => e.quantity > 0).length;
 
-    collection.forEach((entry) => {
-      const card = cards.find((c) => c.card_set_id === entry.cardId);
-      if (card && card.market_price) {
-        setTotal += card.market_price * entry.quantity;
-      }
+        let total = 0;
+        entries.forEach((entry) => {
+          const card = cards.find((c) => c.card_set_id === entry.cardId);
+          if (card && card.market_price) {
+            total += card.market_price * entry.quantity;
+          }
+        });
+        this.totalCollectionValue += total;
+      },
+      error: (error) => console.error(`Error al cargar la colección de ${id}:`, error),
     });
-
-    this.totalCollectionValue += setTotal;
-  }
-
-  calculateDeckValue(deckId: string, cards: OnePieceCard[]): void {
-    const collection = this.onePieceService.loadCollection(deckId);
-    let deckTotal = 0;
-
-    collection.forEach((entry) => {
-      const card = cards.find((c) => c.card_set_id === entry.cardId);
-      if (card && card.market_price) {
-        deckTotal += card.market_price * entry.quantity;
-      }
-    });
-
-    this.totalCollectionValue += deckTotal;
   }
 }
-

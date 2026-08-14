@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatDialog } from '@angular/material/dialog';
+import { forkJoin, of } from 'rxjs';
 import { CardSearchComponent } from '@components/card-search/card-search.component';
 import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
 import { CardCollectionCounterComponent } from '@components/card-collection-counter/card-collection-counter.component';
@@ -20,8 +21,13 @@ import {
   CardCollectionEntry,
 } from '@models/card-entry.model';
 import { CardCollectionService } from '../../../services/card-collection.service';
+import { CollectionApiService, CollectionEntryDto } from '../../../services/collection-api.service';
 
 type FilterType = 'all' | 'inCollection' | 'notInCollection';
+
+function entryKey(variant: string, language: string, condition: string): string {
+  return `${variant}|${language}|${condition}`;
+}
 
 @Component({
   selector: 'app-magic-set-detail',
@@ -85,16 +91,15 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private cardCollectionService: CardCollectionService,
+    private collectionApi: CollectionApiService,
     private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.setId = this.route.snapshot.paramMap.get('setId') || '';
-    this.loadCollection();
     this.loadSetData();
-    this.loadCards();
+    this.loadCollectionThenCards();
 
-    // Listener para mostrar/ocultar botón de scroll
     window.addEventListener('scroll', this.onWindowScroll.bind(this));
   }
 
@@ -111,10 +116,22 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
   }
 
   deleteCollection(): void {
-    if (confirm('¿Estás seguro de que quieres eliminar toda la colección de este set?')) {
+    if (!confirm('¿Estás seguro de que quieres eliminar toda la colección de este set?')) return;
+
+    const deletions = Array.from(this.collection.entries()).flatMap(([cardId, entry]) =>
+      [...entry.foilEntries, ...entry.nonfoilEntries].map((e) =>
+        this.collectionApi.deleteEntry('magic', this.setId, cardId, {
+          variant: e.variant,
+          language: e.language,
+          condition: e.condition,
+        }),
+      ),
+    );
+
+    (deletions.length ? forkJoin(deletions) : of([])).subscribe(() => {
       this.collection.clear();
-      this.saveCollection();
-    }
+      this.updateOwnedCardsCount();
+    });
   }
 
   loadSetData(): void {
@@ -134,26 +151,54 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadCollectionThenCards(): void {
+    this.collectionApi.getCollection('magic', this.setId).subscribe({
+      next: (entries) => {
+        this.setCollectionFromEntries(entries);
+        this.loadCards();
+      },
+      error: (error) => {
+        console.error('Error al cargar la colección:', error);
+        this.loadCards();
+      },
+    });
+  }
+
+  private setCollectionFromEntries(entries: CollectionEntryDto[]): void {
+    this.collection.clear();
+    for (const dto of entries) {
+      let collectionEntry = this.collection.get(dto.cardId);
+      if (!collectionEntry) {
+        collectionEntry = { cardId: dto.cardId, foilEntries: [], nonfoilEntries: [] };
+        this.collection.set(dto.cardId, collectionEntry);
+      }
+      const cardEntry: CardEntry = {
+        cardId: dto.cardId,
+        variant: (dto.variant as CardVariant) ?? 'nonfoil',
+        language: (dto.language as CardEntry['language']) ?? 'en',
+        condition: (dto.condition as CardEntry['condition']) ?? 'Unspecified',
+        quantity: dto.quantity,
+        note: dto.note ?? undefined,
+      };
+      (cardEntry.variant === 'foil' ? collectionEntry.foilEntries : collectionEntry.nonfoilEntries).push(
+        cardEntry,
+      );
+    }
+    this.updateOwnedCardsCount();
+  }
+
   loadCards(): void {
-    this.cardCollectionService.getMagicSetById(this.setId).subscribe({
-      next: (set) => {
-        if (set) {
-          this.cardCollectionService.getMagicSetCards(set.setCode).subscribe({
-            next: (response) => {
-              this.cards = response.cards;
-              // Actualizar el total de cartas con el valor real filtrado
-              if (this.set) {
-                this.set.totalCards = response.totalCards;
-              }
-              // Actualizar el estado de las cartas después de cargarlas
-              this.updateOwnedCardsCount();
-              this.applyFilters();
-            },
-            error: (error) => {
-              console.error('Error al cargar las cartas:', error);
-            },
-          });
+    this.cardCollectionService.getMagicSetCards(this.setId).subscribe({
+      next: (response) => {
+        this.cards = response.cards;
+        if (this.set) {
+          this.set.totalCards = response.totalCards;
         }
+        this.updateOwnedCardsCount();
+        this.applyFilters();
+      },
+      error: (error) => {
+        console.error('Error al cargar las cartas:', error);
       },
     });
   }
@@ -177,11 +222,9 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
   applyFilters(): void {
     let filtered = this.cards;
 
-    // Filtrar por tipo
     if (this.filterType === 'inCollection') {
       filtered = filtered.filter((card) => card.inCollection);
 
-      // Filtrar por variante (foil/nonfoil) en colección
       if (this.filterFoil || this.filterNonfoil) {
         filtered = filtered.filter((card) => {
           const collectionEntry = this.collection.get(card.id);
@@ -189,20 +232,16 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
           const hasNonfoil = (collectionEntry?.nonfoilEntries.length || 0) > 0;
 
           if (this.filterFoil && this.filterNonfoil) {
-            // Ambos marcados: tiene que tener ambos tipos Y la carta debe tener ambas variantes disponibles
             return card.foil && card.nonfoil && hasFoil && hasNonfoil;
           } else if (this.filterFoil) {
-            // Solo foil marcado: la carta debe tener foil disponible Y tenerlo en colección
             return card.foil && hasFoil;
           } else if (this.filterNonfoil) {
-            // Solo nonfoil marcado: la carta debe tener nonfoil disponible Y tenerlo en colección
             return card.nonfoil && hasNonfoil;
           }
           return true;
         });
       }
     } else if (this.filterType === 'notInCollection') {
-      // Filtrar por variante (foil/nonfoil) en NO colección
       if (this.filterFoil || this.filterNonfoil) {
         filtered = filtered.filter((card) => {
           const collectionEntry = this.collection.get(card.id);
@@ -210,24 +249,19 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
           const hasNonfoil = (collectionEntry?.nonfoilEntries.length || 0) > 0;
 
           if (this.filterFoil && this.filterNonfoil) {
-            // Ambos marcados: la carta debe tener ambas variantes disponibles Y no tener ninguna
             return card.foil && card.nonfoil && !hasFoil && !hasNonfoil;
           } else if (this.filterFoil) {
-            // Solo foil marcado: la carta debe tener foil disponible Y no tenerlo en colección
             return card.foil && !hasFoil;
           } else if (this.filterNonfoil) {
-            // Solo nonfoil marcado: la carta debe tener nonfoil disponible Y no tenerlo en colección
             return card.nonfoil && !hasNonfoil;
           }
           return true;
         });
       } else {
-        // Sin checkboxes marcados: no tiene ninguna carta
         filtered = filtered.filter((card) => !card.inCollection);
       }
     }
 
-    // Filtrar por búsqueda
     if (this.searchText) {
       const search = this.searchText.toLowerCase();
       filtered = filtered.filter(
@@ -263,7 +297,6 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
         this.addCardEntry(result.entry);
 
         if (result.addAnother) {
-          // Volver a abrir el diálogo
           setTimeout(() => this.onAddCard(card, variant), 100);
         }
       }
@@ -275,22 +308,31 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
     if (!entry) return;
 
     const entries = variant === 'foil' ? entry.foilEntries : entry.nonfoilEntries;
-    if (entries.length > 0) {
-      // Eliminar una carta de la última entrada
-      const lastEntry = entries[entries.length - 1];
-      if (lastEntry.quantity > 1) {
-        lastEntry.quantity--;
-      } else {
-        entries.pop();
-      }
+    if (entries.length === 0) return;
 
-      // Si no quedan entradas, eliminar de la colección
-      if (entry.foilEntries.length === 0 && entry.nonfoilEntries.length === 0) {
-        this.collection.delete(card.id);
-      }
+    const lastEntry = entries[entries.length - 1];
+    const newQuantity = lastEntry.quantity - 1;
 
-      this.saveCollection();
-    }
+    this.collectionApi
+      .upsertEntry('magic', this.setId, card.id, {
+        variant: lastEntry.variant,
+        language: lastEntry.language,
+        condition: lastEntry.condition,
+        quantity: newQuantity,
+      })
+      .subscribe(() => {
+        if (newQuantity > 0) {
+          lastEntry.quantity = newQuantity;
+        } else {
+          entries.pop();
+        }
+
+        if (entry.foilEntries.length === 0 && entry.nonfoilEntries.length === 0) {
+          this.collection.delete(card.id);
+        }
+
+        this.updateOwnedCardsCount();
+      });
   }
 
   onOpenCardDetail(card: Card): void {
@@ -301,27 +343,24 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
       data: { card, collectionEntry, setId: this.setId },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        // Actualizar la colección con los cambios
-        if (result.foilEntries.length === 0 && result.nonfoilEntries.length === 0) {
-          this.collection.delete(card.id);
-        } else {
-          this.collection.set(card.id, result);
-        }
-        this.saveCollection();
+    dialogRef.afterClosed().subscribe((result: CardCollectionEntry | undefined) => {
+      if (!result) return;
+
+      if (result.foilEntries.length === 0 && result.nonfoilEntries.length === 0) {
+        this.collection.delete(card.id);
+      } else {
+        this.collection.set(card.id, result);
       }
+      // El panel ya sincroniza sus cambios (incrementos/decrementos/ventas) con el backend.
+      this.updateOwnedCardsCount();
     });
   }
 
   openCardMarket(card: Card, event: Event): void {
     event.stopPropagation();
 
-    if (!this.set) {
-      return;
-    }
+    if (!this.set) return;
 
-    // Crear URL de CardMarket usando el nombre de la carta y el ID de expansión
     const cardName = encodeURIComponent(card.name);
     const expansionId = this.set.cardMarketExpansionId;
     const url = `https://www.cardmarket.com/en/Magic/Products/Search?searchString=${cardName}${expansionId ? '&idExpansion=' + expansionId : ''}`;
@@ -330,76 +369,56 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
 
   private addCardEntry(entry: CardEntry): void {
     let collectionEntry = this.collection.get(entry.cardId);
+    const entries = entry.variant === 'foil' ? collectionEntry?.foilEntries : collectionEntry?.nonfoilEntries;
+    const existing = entries?.find(
+      (e) => e.language === entry.language && e.condition === entry.condition,
+    );
+    const newQuantity = (existing?.quantity ?? 0) + entry.quantity;
 
-    if (!collectionEntry) {
-      collectionEntry = {
-        cardId: entry.cardId,
-        foilEntries: [],
-        nonfoilEntries: [],
-      };
-      this.collection.set(entry.cardId, collectionEntry);
-    }
+    this.collectionApi
+      .upsertEntry('magic', this.setId, entry.cardId, {
+        variant: entry.variant,
+        language: entry.language,
+        condition: entry.condition,
+        quantity: newQuantity,
+        note: entry.note ?? null,
+      })
+      .subscribe(() => {
+        if (!collectionEntry) {
+          collectionEntry = { cardId: entry.cardId, foilEntries: [], nonfoilEntries: [] };
+          this.collection.set(entry.cardId, collectionEntry);
+        }
 
-    if (entry.variant === 'foil') {
-      collectionEntry.foilEntries.push(entry);
-    } else {
-      collectionEntry.nonfoilEntries.push(entry);
-    }
+        if (existing) {
+          existing.quantity = newQuantity;
+        } else {
+          const list = entry.variant === 'foil' ? collectionEntry.foilEntries : collectionEntry.nonfoilEntries;
+          list.push({ ...entry, quantity: newQuantity });
+        }
 
-    this.saveCollection();
-  }
-
-  private saveCollection(): void {
-    const data = Array.from(this.collection.values());
-    localStorage.setItem(`collection_${this.setId}`, JSON.stringify(data));
-    this.updateOwnedCardsCount();
+        this.updateOwnedCardsCount();
+      });
   }
 
   private updateOwnedCardsCount(): void {
-    // Contar las cartas únicas en la colección
     const uniqueCards = this.collection.size;
     if (this.set) {
       this.set.ownedCards = uniqueCards;
-      // Guardar ownedCards en localStorage
-      localStorage.setItem(`ownedCards_${this.setId}`, uniqueCards.toString());
     }
 
-    // Actualizar el estado inCollection en las cartas
     this.cards.forEach((card) => {
       card.inCollection = this.collection.has(card.id);
     });
 
-    // Re-aplicar filtros para actualizar la vista
     this.applyFilters();
-  }
-
-  private loadCollection(): void {
-    const data = localStorage.getItem(`collection_${this.setId}`);
-    if (data) {
-      const entries: CardCollectionEntry[] = JSON.parse(data);
-      this.collection.clear();
-      entries.forEach((entry) => {
-        this.collection.set(entry.cardId, entry);
-      });
-    }
-
-    // Cargar ownedCards desde localStorage
-    const ownedCards = localStorage.getItem(`ownedCards_${this.setId}`);
-    if (ownedCards && this.set) {
-      this.set.ownedCards = parseInt(ownedCards, 10);
-    }
-
-    this.updateOwnedCardsCount();
   }
 
   exportDuplicatesToCSV(): void {
     const csvRows: string[] = [];
-    // Cabeceras del CSV
     csvRows.push(
       'cardmarketId,"quantity","name","set","setCode","cn","condition","language","isFoil","isSigned","price","comment","location","nameDE","nameES","nameFR","nameIT","rarity","listedAt"'
     );
 
-    // Iterar sobre la colección
     this.collection.forEach((entry, cardId) => {
       const card = this.cards.find((c) => c.id === cardId);
       if (!card) return;
@@ -410,10 +429,8 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
         ja: 'Japanese',
       };
 
-      // Procesar entradas foil
       const totalFoilQuantity = entry.foilEntries.reduce((sum, e) => sum + e.quantity, 0);
       if (totalFoilQuantity > 0) {
-        // Agrupar por idioma
         const foilByLanguage = new Map<string, { quantity: number }>();
         entry.foilEntries.forEach((e) => {
           const existing = foilByLanguage.get(e.language) || { quantity: 0 };
@@ -421,27 +438,22 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
           foilByLanguage.set(e.language, existing);
         });
 
-        // Determinar cuántas foils guardamos (priorizar inglés)
         let keptFoilCount = 0;
         const hasEnglish = foilByLanguage.has('en');
 
         if (hasEnglish) {
-          // Si hay foil en inglés, guardamos 1 en inglés
           keptFoilCount = 1;
         } else {
-          // Si no hay inglés, guardamos 1 del primer idioma disponible
           keptFoilCount = 1;
         }
 
         foilByLanguage.forEach((data, lang) => {
           let duplicateQuantity = data.quantity;
 
-          // Si es inglés y guardamos 1, restar 1
           if (lang === 'en' && hasEnglish && keptFoilCount > 0) {
             duplicateQuantity -= 1;
-            keptFoilCount = 0; // Ya contabilizamos la que guardamos
+            keptFoilCount = 0;
           } else if (!hasEnglish && keptFoilCount > 0) {
-            // Si no hay inglés, restar 1 solo al primer idioma
             const isFirstLang = Array.from(foilByLanguage.keys())[0] === lang;
             if (isFirstLang) {
               duplicateQuantity -= 1;
@@ -449,7 +461,6 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
             }
           }
 
-          // Todas las foils restantes van al CSV
           if (duplicateQuantity > 0) {
             const row = [
               card.cardmarket_id || '',
@@ -477,16 +488,12 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
         });
       }
 
-      // Procesar entradas nonfoil
       const totalNonfoilQuantity = entry.nonfoilEntries.reduce((sum, e) => sum + e.quantity, 0);
       if (totalNonfoilQuantity > 0) {
-        // Si hay foil, todas las nonfoil son repetidas
-        // Si no hay foil, todas menos 1 nonfoil son repetidas
         const hasFoil = totalFoilQuantity > 0;
         const duplicateQuantity = hasFoil ? totalNonfoilQuantity : totalNonfoilQuantity - 1;
 
         if (duplicateQuantity > 0) {
-          // Agrupar por idioma
           const nonfoilByLanguage = new Map<string, { quantity: number }>();
           entry.nonfoilEntries.forEach((e) => {
             const existing = nonfoilByLanguage.get(e.language) || { quantity: 0 };
@@ -496,9 +503,7 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
 
           nonfoilByLanguage.forEach((data, lang) => {
             let langDuplicates = data.quantity;
-            // Si no hay foil y es el primer idioma procesado, restar 1
             if (!hasFoil && langDuplicates > 0) {
-              // Solo restamos 1 a la primera entrada procesada
               const isFirstLang = Array.from(nonfoilByLanguage.keys())[0] === lang;
               if (isFirstLang) {
                 langDuplicates -= 1;
@@ -534,7 +539,6 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Crear y descargar el archivo CSV
     const csvContent = csvRows.join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -561,10 +565,7 @@ export class MagicSetDetailComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((hasChanges) => {
       if (hasChanges) {
-        // Recargar la colección desde localStorage
-        this.loadCollection();
-        this.updateOwnedCardsCount();
-        this.applyFilters();
+        this.loadCollectionThenCards();
       }
     });
   }

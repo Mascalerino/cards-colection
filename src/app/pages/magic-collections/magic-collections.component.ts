@@ -3,7 +3,9 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { CardCollectionService } from '../../services/card-collection.service';
+import { CollectionApiService } from '../../services/collection-api.service';
 import { CardSet } from '@models/card-set.model';
+import { Card } from '@models/card.model';
 import { SetListComponent } from '@components/set-list/set-list.component';
 import { CommonModule } from '@angular/common';
 
@@ -21,6 +23,7 @@ export class MagicCollectionsComponent implements OnInit {
 
   constructor(
     private cardCollectionService: CardCollectionService,
+    private collectionApi: CollectionApiService,
     private router: Router
   ) {}
 
@@ -28,25 +31,8 @@ export class MagicCollectionsComponent implements OnInit {
     this.cardCollectionService.getMagicSets().subscribe({
       next: (sets) => {
         this.magicSets = sets;
-        // Cargar el total de cartas y las cartas en colección para cada set
-        this.magicSets.forEach((set) => {
-          this.cardCollectionService.getMagicSetCards(set.setCode).subscribe({
-            next: (response) => {
-              set.totalCards = response.totalCards;
-            },
-            error: (error) => {
-              console.error(`Error al cargar total de cartas para ${set.name}:`, error);
-              set.totalCards = 0;
-            },
-          });
-
-          // Cargar ownedCards desde localStorage
-          const ownedCards = localStorage.getItem(`ownedCards_${set.id}`);
-          set.ownedCards = ownedCards ? parseInt(ownedCards, 10) : 0;
-
-          // Calcular valor de la colección de este set
-          this.calculateSetValue(set.id);
-        });
+        this.totalCollectionValue = 0;
+        this.magicSets.forEach((set) => this.loadSetProgressAndValue(set));
       },
       error: (error) => {
         console.error('Error al cargar los sets de Magic:', error);
@@ -54,64 +40,42 @@ export class MagicCollectionsComponent implements OnInit {
     });
   }
 
-  calculateSetValue(setId: string): void {
-    const collectionKey = `collection_${setId}`;
-    const collectionData = localStorage.getItem(collectionKey);
-    
-    if (!collectionData) {
-      console.log(`No hay colección para el set ${setId}`);
-      return;
-    }
+  private loadSetProgressAndValue(set: CardSet): void {
+    this.cardCollectionService.getMagicSetCards(set.id).subscribe({
+      next: (response) => {
+        set.totalCards = response.totalCards;
+        this.calculateSetValue(set, response.cards);
+      },
+      error: (error) => {
+        console.error(`Error al cargar cartas para ${set.name}:`, error);
+        set.totalCards = 0;
+      },
+    });
+  }
 
-    try {
-      const collection = JSON.parse(collectionData);
-      console.log(`Calculando valor para set ${setId}, colección:`, collection);
-      
-      this.cardCollectionService.getMagicSetCards(setId).subscribe({
-        next: (response) => {
-          const cards = response.cards;
-          let setTotal = 0;
+  private calculateSetValue(set: CardSet, cards: Card[]): void {
+    this.collectionApi.getCollection('magic', set.id).subscribe({
+      next: (entries) => {
+        set.ownedCards = new Set(entries.map((e) => e.cardId)).size;
 
-          collection.forEach((collectionCard: any) => {
-            const card = cards.find((c: any) => c.id === collectionCard.cardId);
-            if (!card) return;
+        let setTotal = 0;
+        entries.forEach((entry) => {
+          const card = cards.find((c) => c.id === entry.cardId);
+          if (!card) return;
 
-            // Calcular valor de foils
-            if (collectionCard.foilEntries && collectionCard.foilEntries.length > 0) {
-              collectionCard.foilEntries.forEach((entry: any) => {
-                if (card.prices?.eur_foil) {
-                  const price = parseFloat(card.prices.eur_foil);
-                  if (!isNaN(price)) {
-                    setTotal += price * entry.quantity;
-                  }
-                }
-              });
-            }
+          const price = entry.variant === 'foil' ? card.prices?.eur_foil : card.prices?.eur;
+          if (price) {
+            const parsed = parseFloat(price);
+            if (!isNaN(parsed)) setTotal += parsed * entry.quantity;
+          }
+        });
 
-            // Calcular valor de non-foils
-            if (collectionCard.nonfoilEntries && collectionCard.nonfoilEntries.length > 0) {
-              collectionCard.nonfoilEntries.forEach((entry: any) => {
-                if (card.prices?.eur) {
-                  const price = parseFloat(card.prices.eur);
-                  if (!isNaN(price)) {
-                    setTotal += price * entry.quantity;
-                  }
-                }
-              });
-            }
-          });
-
-          console.log(`Valor calculado para set ${setId}: ${setTotal}€`);
-          this.totalCollectionValue += setTotal;
-          console.log(`Valor total acumulado: ${this.totalCollectionValue}€`);
-        },
-        error: (error) => {
-          console.error(`Error al obtener cartas del set ${setId}:`, error);
-        }
-      });
-    } catch (error) {
-      console.error(`Error al calcular valor del set ${setId}:`, error);
-    }
+        this.totalCollectionValue += setTotal;
+      },
+      error: (error) => {
+        console.error(`Error al obtener la colección del set ${set.id}:`, error);
+      },
+    });
   }
 
   onSetClick(set: CardSet): void {

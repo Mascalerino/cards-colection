@@ -11,6 +11,8 @@ import {
   CardCollectionEntry,
 } from '@models/card-entry.model';
 import { CardSale } from '@models/card-sale.model';
+import { CollectionApiService } from '@services/collection-api.service';
+import { SalesApiService, BackendSale } from '@services/sales-api.service';
 
 export interface CardDetailPanelData {
   card: Card;
@@ -20,6 +22,22 @@ export interface CardDetailPanelData {
 
 interface DisplayEntry extends CardEntry {
   displayType: string;
+}
+
+function toCardSale(sale: BackendSale): CardSale {
+  return {
+    id: sale.id,
+    cardId: sale.cardId ?? '',
+    cardName: sale.cardName ?? '',
+    collectorNumber: sale.collectorNumber ?? '',
+    language: (sale.language as CardSale['language']) ?? 'en',
+    condition: (sale.condition as CardSale['condition']) ?? 'Unspecified',
+    quantity: sale.quantity,
+    pricePerUnit: parseFloat(sale.pricePerUnit),
+    totalPrice: parseFloat(sale.totalPrice),
+    saleDate: sale.saleDate,
+    variant: (sale.variant as CardSale['variant']) ?? 'nonfoil',
+  };
 }
 
 @Component({
@@ -54,7 +72,9 @@ export class CardDetailPanelComponent implements OnInit {
 
   constructor(
     private dialogRef: MatDialogRef<CardDetailPanelComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: CardDetailPanelData
+    @Inject(MAT_DIALOG_DATA) public data: CardDetailPanelData,
+    private collectionApi: CollectionApiService,
+    private salesApi: SalesApiService,
   ) {
     this.card = data.card;
     this.setId = data.setId;
@@ -72,18 +92,15 @@ export class CardDetailPanelComponent implements OnInit {
   }
 
   loadSalesHistory(): void {
-    const storageKey = `sales_${this.setId}`;
-    const storedData = localStorage.getItem(storageKey);
-
-    if (storedData) {
-      const allSales: CardSale[] = JSON.parse(storedData);
-      // Filtrar solo las ventas de esta carta
-      this.salesHistory = allSales.filter((sale) => sale.cardId === this.card.id);
-      // Ordenar por fecha más reciente primero
-      this.salesHistory.sort(
-        (a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime()
-      );
-    }
+    this.salesApi.listSales(this.setId).subscribe({
+      next: (sales) => {
+        this.salesHistory = sales
+          .filter((sale) => sale.cardId === this.card.id)
+          .map(toCardSale)
+          .sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime());
+      },
+      error: (error) => console.error('Error al cargar el historial de ventas:', error),
+    });
   }
 
   formatDate(dateString: string): string {
@@ -111,32 +128,16 @@ export class CardDetailPanelComponent implements OnInit {
       return;
     }
 
-    // 1. Eliminar la venta del localStorage
-    const storageKey = `sales_${this.setId}`;
-    const storedData = localStorage.getItem(storageKey);
-
-    if (storedData) {
-      let allSales: CardSale[] = JSON.parse(storedData);
-      // Filtrar para remover esta venta específica
-      allSales = allSales.filter((s) => s.id !== sale.id);
-      localStorage.setItem(storageKey, JSON.stringify(allSales));
-    }
-
-    // 2. Devolver la carta a la colección
-    this.returnCardsToCollection(sale);
-
-    // 3. Actualizar la colección en localStorage
-    this.saveCollectionToStorage();
-
-    // 4. Recargar el historial de ventas
-    this.loadSalesHistory();
-
-    // 5. Actualizar la vista de entradas
-    this.updateAllEntries();
+    this.salesApi.deleteSale(sale.id).subscribe({
+      next: () => {
+        this.returnCardsToCollection(sale);
+        this.loadSalesHistory();
+      },
+      error: (error) => console.error('Error al eliminar la venta:', error),
+    });
   }
 
   private returnCardsToCollection(sale: CardSale): void {
-    // Buscar si ya existe una entrada con el mismo idioma, condición y variante
     const entries =
       sale.variant === 'foil'
         ? this.collectionEntry.foilEntries
@@ -145,48 +146,35 @@ export class CardDetailPanelComponent implements OnInit {
     const existingEntry = entries.find(
       (e) => e.language === sale.language && e.condition === sale.condition
     );
+    const newQuantity = (existingEntry?.quantity ?? 0) + sale.quantity;
 
-    if (existingEntry) {
-      // Si existe, incrementar la cantidad
-      existingEntry.quantity += sale.quantity;
-    } else {
-      // Si no existe, crear una nueva entrada
-      const newEntry: CardEntry = {
-        cardId: sale.cardId,
+    this.collectionApi
+      .upsertEntry(this.card_game(), this.setId, this.card.id, {
         variant: sale.variant,
         language: sale.language,
         condition: sale.condition,
-        quantity: sale.quantity,
-      };
-
-      if (sale.variant === 'foil') {
-        this.collectionEntry.foilEntries.push(newEntry);
-      } else {
-        this.collectionEntry.nonfoilEntries.push(newEntry);
-      }
-    }
+        quantity: newQuantity,
+      })
+      .subscribe(() => {
+        if (existingEntry) {
+          existingEntry.quantity = newQuantity;
+        } else {
+          const newEntry: CardEntry = {
+            cardId: sale.cardId,
+            variant: sale.variant,
+            language: sale.language,
+            condition: sale.condition,
+            quantity: sale.quantity,
+          };
+          entries.push(newEntry);
+        }
+        this.updateAllEntries();
+      });
   }
 
-  private saveCollectionToStorage(): void {
-    const storageKey = `collection_${this.setId}`;
-    const storedData = localStorage.getItem(storageKey);
-
-    if (storedData) {
-      let collection: CardCollectionEntry[] = JSON.parse(storedData);
-
-      // Buscar la entrada de esta carta en la colección
-      const cardIndex = collection.findIndex((c) => c.cardId === this.card.id);
-
-      if (cardIndex > -1) {
-        // Actualizar la entrada existente
-        collection[cardIndex] = this.collectionEntry;
-      } else {
-        // Añadir nueva entrada si no existe
-        collection.push(this.collectionEntry);
-      }
-
-      localStorage.setItem(storageKey, JSON.stringify(collection));
-    }
+  private card_game(): 'magic' {
+    // El panel de detalle solo se usa para Magic (ventas/CardMarket).
+    return 'magic';
   }
 
   get cardTitle(): string {
@@ -227,36 +215,48 @@ export class CardDetailPanelComponent implements OnInit {
   }
 
   incrementEntry(entry: DisplayEntry): void {
-    // Encontrar y actualizar la entrada original
     const originalEntry = this.findOriginalEntry(entry);
-    if (originalEntry) {
-      originalEntry.quantity++;
-      entry.quantity = originalEntry.quantity;
-    }
+    if (!originalEntry) return;
+
+    const newQuantity = originalEntry.quantity + 1;
+    this.collectionApi
+      .upsertEntry(this.card_game(), this.setId, this.card.id, {
+        variant: originalEntry.variant,
+        language: originalEntry.language,
+        condition: originalEntry.condition,
+        quantity: newQuantity,
+      })
+      .subscribe(() => {
+        originalEntry.quantity = newQuantity;
+        entry.quantity = newQuantity;
+      });
   }
 
   decrementEntry(entry: DisplayEntry): void {
     const originalEntry = this.findOriginalEntry(entry);
     if (!originalEntry) return;
 
-    if (originalEntry.quantity > 1) {
-      originalEntry.quantity--;
-      entry.quantity = originalEntry.quantity;
-    } else {
-      // Eliminar la entrada
-      if (entry.variant === 'foil') {
-        const index = this.collectionEntry.foilEntries.indexOf(originalEntry);
-        if (index > -1) {
-          this.collectionEntry.foilEntries.splice(index, 1);
+    const newQuantity = originalEntry.quantity - 1;
+
+    this.collectionApi
+      .upsertEntry(this.card_game(), this.setId, this.card.id, {
+        variant: originalEntry.variant,
+        language: originalEntry.language,
+        condition: originalEntry.condition,
+        quantity: newQuantity,
+      })
+      .subscribe(() => {
+        if (newQuantity > 0) {
+          originalEntry.quantity = newQuantity;
+          entry.quantity = newQuantity;
+        } else {
+          const list =
+            entry.variant === 'foil' ? this.collectionEntry.foilEntries : this.collectionEntry.nonfoilEntries;
+          const index = list.indexOf(originalEntry);
+          if (index > -1) list.splice(index, 1);
+          this.updateAllEntries();
         }
-      } else {
-        const index = this.collectionEntry.nonfoilEntries.indexOf(originalEntry);
-        if (index > -1) {
-          this.collectionEntry.nonfoilEntries.splice(index, 1);
-        }
-      }
-      this.updateAllEntries();
-    }
+      });
   }
 
   private findOriginalEntry(displayEntry: DisplayEntry): CardEntry | undefined {
@@ -280,7 +280,6 @@ export class CardDetailPanelComponent implements OnInit {
   private updateAllEntries(): void {
     this.allEntries = [];
 
-    // Añadir entradas foil
     this.collectionEntry.foilEntries.forEach((entry) => {
       this.allEntries.push({
         ...entry,
@@ -288,7 +287,6 @@ export class CardDetailPanelComponent implements OnInit {
       });
     });
 
-    // Añadir entradas nonfoil
     this.collectionEntry.nonfoilEntries.forEach((entry) => {
       this.allEntries.push({
         ...entry,

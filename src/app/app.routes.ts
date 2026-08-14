@@ -1,13 +1,20 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/card-collection.component').then((m) => m.CardCollectionComponent),
   },
   {
     path: 'magic',
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -27,6 +34,7 @@ export const routes: Routes = [
   },
   {
     path: 'pokemon',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/pokemon-collections/pokemon-collections.component').then(
         (m) => m.PokemonCollectionsComponent
@@ -34,6 +42,7 @@ export const routes: Routes = [
   },
   {
     path: 'naruto',
+    canActivate: [authGuard],
     children: [
       {
         path: '',
@@ -53,6 +62,7 @@ export const routes: Routes = [
   },
   {
     path: 'onepiece',
+    canActivate: [authGuard],
     children: [
       {
         path: '',

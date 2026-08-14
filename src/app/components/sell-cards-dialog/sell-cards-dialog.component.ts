@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { firstValueFrom } from 'rxjs';
 import { Card } from '@models/card.model';
 import {
   CardEntry,
@@ -14,6 +15,8 @@ import {
   CardCondition,
 } from '@models/card-entry.model';
 import { CardSale } from '@models/card-sale.model';
+import { CollectionApiService } from '@services/collection-api.service';
+import { SalesApiService } from '@services/sales-api.service';
 
 export interface SellCardsDialogData {
   setId: string;
@@ -46,6 +49,7 @@ export class SellCardsDialogComponent implements OnInit {
   pricePerUnit: number = 0.02;
   sessionSales: CardSale[] = [];
   csvImportErrors: string[] = [];
+  saving: boolean = false;
 
   cards: Card[];
   collection: Map<string, CardCollectionEntry>;
@@ -53,7 +57,9 @@ export class SellCardsDialogComponent implements OnInit {
 
   constructor(
     private dialogRef: MatDialogRef<SellCardsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: SellCardsDialogData
+    @Inject(MAT_DIALOG_DATA) public data: SellCardsDialogData,
+    private collectionApi: CollectionApiService,
+    private salesApi: SalesApiService,
   ) {
     this.cards = data.cards;
     this.collection = data.collection;
@@ -70,7 +76,6 @@ export class SellCardsDialogComponent implements OnInit {
 
     const searchLower = this.searchText.toLowerCase().trim();
 
-    // Filtrar solo cartas que están en la colección
     this.filteredCards = this.cards.filter((card) => {
       const inCollection = this.collection.has(card.id);
       if (!inCollection) return false;
@@ -81,7 +86,6 @@ export class SellCardsDialogComponent implements OnInit {
       return matchesName || matchesNumber;
     });
 
-    // Limitar resultados
     this.filteredCards = this.filteredCards.slice(0, 20);
   }
 
@@ -92,25 +96,19 @@ export class SellCardsDialogComponent implements OnInit {
 
     const collectionEntry = this.collection.get(card.id);
     if (collectionEntry) {
-      // Combinar todas las entradas (foil y nonfoil)
       this.availableEntries = [
         ...collectionEntry.foilEntries.map((e) => ({ ...e })),
         ...collectionEntry.nonfoilEntries.map((e) => ({ ...e })),
       ];
     }
 
-    // Precio por defecto
     this.pricePerUnit = 0.02;
   }
 
   selectEntry(entry: CardEntry): void {
     if (entry.quantity === 0) return;
-
     this.selectedEntry = entry;
     this.saleQuantity = 1;
-
-    // Mantener precio por defecto al seleccionar entrada
-    // El precio ya está establecido en 0.02 desde selectCard()
   }
 
   getCardTotalCount(cardId: string): number {
@@ -133,6 +131,7 @@ export class SellCardsDialogComponent implements OnInit {
 
   canAddSale(): boolean {
     return (
+      !this.saving &&
       !!this.selectedCard &&
       !!this.selectedEntry &&
       this.saleQuantity > 0 &&
@@ -141,101 +140,80 @@ export class SellCardsDialogComponent implements OnInit {
     );
   }
 
-  addSale(): void {
+  async addSale(): Promise<void> {
     if (!this.canAddSale() || !this.selectedCard || !this.selectedEntry) return;
 
-    const sale: CardSale = {
-      id: this.generateSaleId(),
-      cardId: this.selectedCard.id,
-      cardName: this.selectedCard.name,
-      collectorNumber: this.selectedCard.collector_number,
-      language: this.selectedEntry.language,
-      condition: this.selectedEntry.condition,
-      quantity: this.saleQuantity,
-      pricePerUnit: this.pricePerUnit,
-      totalPrice: this.saleQuantity * this.pricePerUnit,
-      saleDate: new Date().toISOString(),
-      variant: this.selectedEntry.variant,
-    };
+    const card = this.selectedCard;
+    const entry = this.selectedEntry;
+    const quantity = this.saleQuantity;
+    const totalPrice = quantity * this.pricePerUnit;
 
-    // Guardar venta
-    this.saveSale(sale);
-
-    // Actualizar colección (restar cantidad)
-    this.selectedEntry.quantity -= this.saleQuantity;
-
-    // Si la cantidad llega a 0, remover la entrada
-    if (this.selectedEntry.quantity === 0) {
-      this.removeEntryFromCollection(this.selectedEntry);
+    this.saving = true;
+    try {
+      const sale = await this.registerSale(card, entry, quantity, this.pricePerUnit, totalPrice);
+      this.sessionSales.push(sale);
+      this.resetForm();
+      alert(`Venta registrada: ${sale.quantity}x ${sale.cardName} por ${sale.totalPrice.toFixed(2)}€`);
+    } catch (error) {
+      console.error('Error al registrar la venta:', error);
+      alert('Error al registrar la venta. Inténtalo de nuevo.');
+    } finally {
+      this.saving = false;
     }
+  }
 
-    // Actualizar colección en el componente padre
-    this.updateParentCollection();
-
-    // Añadir a ventas de sesión
-    this.sessionSales.push(sale);
-
-    // Resetear formulario
-    this.resetForm();
-
-    // Mostrar notificación de éxito
-    alert(
-      `Venta registrada: ${sale.quantity}x ${sale.cardName} por ${sale.totalPrice.toFixed(2)}€`
+  /** Crea la venta en el backend y decrementa la colección; devuelve la venta creada. */
+  private async registerSale(
+    card: Card,
+    entry: CardEntry,
+    quantity: number,
+    pricePerUnit: number,
+    totalPrice: number,
+  ): Promise<CardSale> {
+    const created = await firstValueFrom(
+      this.salesApi.createSale({
+        setId: this.setId,
+        cardExternalId: card.id,
+        cardName: card.name,
+        collectorNumber: card.collector_number,
+        language: entry.language,
+        condition: entry.condition,
+        variant: entry.variant,
+        quantity,
+        pricePerUnit,
+        totalPrice,
+        saleDate: new Date().toISOString(),
+      }),
     );
-  }
 
-  private generateSaleId(): string {
-    return `sale_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
+    const newQuantity = entry.quantity - quantity;
+    await firstValueFrom(
+      this.collectionApi.upsertEntry('magic', this.setId, card.id, {
+        variant: entry.variant,
+        language: entry.language,
+        condition: entry.condition,
+        quantity: newQuantity,
+      }),
+    );
 
-  private saveSale(sale: CardSale): void {
-    const storageKey = `sales_${this.setId}`;
-    const storedData = localStorage.getItem(storageKey);
-    let sales: CardSale[] = storedData ? JSON.parse(storedData) : [];
-
-    sales.push(sale);
-    localStorage.setItem(storageKey, JSON.stringify(sales));
-  }
-
-  private removeEntryFromCollection(entry: CardEntry): void {
-    if (!this.selectedCard) return;
-
-    const collectionEntry = this.collection.get(this.selectedCard.id);
-    if (!collectionEntry) return;
-
-    if (entry.variant === 'foil') {
-      const index = collectionEntry.foilEntries.findIndex(
-        (e) =>
-          e.language === entry.language &&
-          e.condition === entry.condition &&
-          e.variant === entry.variant
-      );
-      if (index > -1) {
-        collectionEntry.foilEntries.splice(index, 1);
-      }
-    } else {
-      const index = collectionEntry.nonfoilEntries.findIndex(
-        (e) =>
-          e.language === entry.language &&
-          e.condition === entry.condition &&
-          e.variant === entry.variant
-      );
-      if (index > -1) {
-        collectionEntry.nonfoilEntries.splice(index, 1);
-      }
+    entry.quantity = newQuantity;
+    if (newQuantity <= 0) {
+      this.removeEntryFromCollectionByCard(card, entry);
     }
 
-    // Si no quedan entradas, remover de colección
-    if (collectionEntry.foilEntries.length === 0 && collectionEntry.nonfoilEntries.length === 0) {
-      this.collection.delete(this.selectedCard.id);
-    }
-  }
-
-  private updateParentCollection(): void {
-    // Guardar en localStorage
-    const storageKey = `collection_${this.setId}`;
-    const collectionArray: CardCollectionEntry[] = Array.from(this.collection.values());
-    localStorage.setItem(storageKey, JSON.stringify(collectionArray));
+    return {
+      id: created.id,
+      cardId: card.id,
+      cardName: card.name,
+      collectorNumber: card.collector_number,
+      language: entry.language,
+      condition: entry.condition,
+      quantity,
+      pricePerUnit,
+      totalPrice,
+      saleDate: created.saleDate,
+      variant: entry.variant,
+    };
   }
 
   private resetForm(): void {
@@ -283,11 +261,10 @@ export class SellCardsDialogComponent implements OnInit {
     };
 
     reader.readAsText(file);
-    // Resetear el input para permitir seleccionar el mismo archivo otra vez
     input.value = '';
   }
 
-  importCSV(content: string): void {
+  async importCSV(content: string): Promise<void> {
     this.csvImportErrors = [];
     const lines = content.split('\n').filter((line) => line.trim());
 
@@ -296,13 +273,11 @@ export class SellCardsDialogComponent implements OnInit {
       return;
     }
 
-    // Validar encabezados
     const headers = lines[0]
       .toLowerCase()
       .split(',')
       .map((h) => h.trim());
     const requiredHeaders = ['numerocarta', 'idioma', 'cantidad'];
-    const optionalHeaders = ['foil', 'estado', 'precio'];
 
     if (!requiredHeaders.every((h) => headers.includes(h))) {
       this.csvImportErrors.push(
@@ -322,8 +297,9 @@ export class SellCardsDialogComponent implements OnInit {
 
     let successCount = 0;
     let errorCount = 0;
+    this.saving = true;
 
-    // Procesar cada línea
+    // Procesar secuencialmente: cada fila puede afectar al stock que valida la siguiente
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
@@ -337,15 +313,13 @@ export class SellCardsDialogComponent implements OnInit {
       const quantityStr = values[headerIndexes.quantity];
       const priceStr = headerIndexes.price >= 0 ? values[headerIndexes.price] : '0.02';
 
-      // Validar y procesar
-      const result = this.processCsvRow(
+      const result = await this.processCsvRow(
         cardNumber,
         language,
         foilStr,
         condition,
         quantityStr,
         priceStr,
-        i + 1
       );
       if (result.success) {
         successCount++;
@@ -357,58 +331,49 @@ export class SellCardsDialogComponent implements OnInit {
       }
     }
 
-    // Mostrar resumen
-    const summary = `Importación completada: ${successCount} ventas registradas, ${errorCount} errores`;
-    alert(summary);
+    this.saving = false;
+    alert(`Importación completada: ${successCount} ventas registradas, ${errorCount} errores`);
   }
 
-  private processCsvRow(
+  private async processCsvRow(
     cardNumber: string,
     language: string,
     foilStr: string,
     condition: string,
     quantityStr: string,
     priceStr: string,
-    lineNumber: number
-  ): { success: boolean; error?: string } {
-    // Validar cantidad
+  ): Promise<{ success: boolean; error?: string }> {
     const quantity = parseInt(quantityStr, 10);
     if (isNaN(quantity) || quantity <= 0) {
       return { success: false, error: 'cantidad inválida' };
     }
 
-    // Validar y procesar foil (0 o 1)
     const foilValue = parseInt(foilStr, 10);
     if (isNaN(foilValue) || (foilValue !== 0 && foilValue !== 1)) {
       return { success: false, error: 'foil debe ser 0 (normal) o 1 (foil)' };
     }
     const isFoil = foilValue === 1;
 
-    // Validar precio
     const price = parseFloat(priceStr);
     if (isNaN(price) || price <= 0) {
       return { success: false, error: 'precio inválido' };
     }
 
-    // Buscar carta por número
     const card = this.findCardByNumber(cardNumber);
     if (!card) {
       return { success: false, error: `carta con número ${cardNumber} no encontrada` };
     }
 
-    // Normalizar idioma
     const normalizedLanguage = this.normalizeLanguage(language);
     if (!normalizedLanguage) {
       return { success: false, error: `idioma "${language}" no válido (usa EN, ES, JA)` };
     }
 
-    // Normalizar estado
     const normalizedCondition = this.normalizeCondition(condition);
     if (!normalizedCondition) {
       return { success: false, error: `estado "${condition}" no válido (usa NM, LP, MP, HP, DMG)` };
     }
 
-    // Buscar entrada en la colección
     const entry = this.findEntry(card, normalizedLanguage, normalizedCondition, isFoil);
     if (!entry) {
       const foilText = isFoil ? 'foil' : 'normal';
@@ -418,7 +383,6 @@ export class SellCardsDialogComponent implements OnInit {
       };
     }
 
-    // Validar stock disponible
     if (entry.quantity < quantity) {
       return {
         success: false,
@@ -426,36 +390,14 @@ export class SellCardsDialogComponent implements OnInit {
       };
     }
 
-    // Crear y guardar la venta
-    const sale: CardSale = {
-      id: this.generateSaleId(),
-      cardId: card.id,
-      cardName: card.name,
-      collectorNumber: card.collector_number,
-      language: normalizedLanguage,
-      condition: normalizedCondition,
-      quantity: quantity,
-      pricePerUnit: price,
-      totalPrice: quantity * price,
-      saleDate: new Date().toISOString(),
-      variant: entry.variant,
-    };
-
-    // Guardar venta
-    this.saveSale(sale);
-
-    // Actualizar colección (restar cantidad)
-    entry.quantity -= quantity;
-
-    // Si la cantidad llega a 0, remover la entrada
-    if (entry.quantity === 0) {
-      this.removeEntryFromCollectionByCard(card, entry);
+    try {
+      const sale = await this.registerSale(card, entry, quantity, price, quantity * price);
+      this.sessionSales.push(sale);
+      return { success: true };
+    } catch (error) {
+      console.error('Error al registrar venta desde CSV:', error);
+      return { success: false, error: 'error al guardar la venta en el servidor' };
     }
-
-    // Añadir a ventas de sesión
-    this.sessionSales.push(sale);
-
-    return { success: true };
   }
 
   private findCardByNumber(cardNumber: string): Card | null {
@@ -464,12 +406,11 @@ export class SellCardsDialogComponent implements OnInit {
 
   private normalizeLanguage(lang: string): CardLanguage | null {
     const langUpper = lang.toUpperCase();
-    const validLanguages: CardLanguage[] = ['en', 'es', 'ja'];
     const langMap: { [key: string]: CardLanguage } = {
       EN: 'en',
       ES: 'es',
       JA: 'ja',
-      JP: 'ja', // Alias
+      JP: 'ja',
     };
     return langMap[langUpper] || null;
   }
@@ -503,7 +444,6 @@ export class SellCardsDialogComponent implements OnInit {
     const collectionEntry = this.collection.get(card.id);
     if (!collectionEntry) return null;
 
-    // Buscar solo en foil o nonfoil según el parámetro
     const entries = isFoil ? collectionEntry.foilEntries : collectionEntry.nonfoilEntries;
 
     return (
@@ -516,35 +456,17 @@ export class SellCardsDialogComponent implements OnInit {
     const collectionEntry = this.collection.get(card.id);
     if (!collectionEntry) return;
 
-    if (entry.variant === 'foil') {
-      const index = collectionEntry.foilEntries.findIndex(
-        (e) =>
-          e.language === entry.language &&
-          e.condition === entry.condition &&
-          e.variant === entry.variant
-      );
-      if (index > -1) {
-        collectionEntry.foilEntries.splice(index, 1);
-      }
-    } else {
-      const index = collectionEntry.nonfoilEntries.findIndex(
-        (e) =>
-          e.language === entry.language &&
-          e.condition === entry.condition &&
-          e.variant === entry.variant
-      );
-      if (index > -1) {
-        collectionEntry.nonfoilEntries.splice(index, 1);
-      }
+    const list = entry.variant === 'foil' ? collectionEntry.foilEntries : collectionEntry.nonfoilEntries;
+    const index = list.findIndex(
+      (e) => e.language === entry.language && e.condition === entry.condition && e.variant === entry.variant
+    );
+    if (index > -1) {
+      list.splice(index, 1);
     }
 
-    // Si no quedan entradas, remover de colección
     if (collectionEntry.foilEntries.length === 0 && collectionEntry.nonfoilEntries.length === 0) {
       this.collection.delete(card.id);
     }
-
-    // Actualizar en localStorage
-    this.updateParentCollection();
   }
 
   close(): void {

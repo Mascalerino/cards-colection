@@ -1,4 +1,13 @@
 <div class="card-collection-container">
+  <button mat-button class="logout-button" (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    @if (currentUser(); as user) {
+      Salir ({{ user.username }})
+    } @else {
+      Salir
+    }
+  </button>
+
   <h1>Bienvenido a tu Colección de Cartas</h1>
   <p class="welcome-message">Organiza y gestiona tus colecciones de cartas coleccionables</p>
 

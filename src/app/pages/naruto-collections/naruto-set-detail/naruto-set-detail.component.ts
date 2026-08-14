@@ -8,8 +8,10 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { forkJoin, of, Observable } from 'rxjs';
 import { CardCheckboxItemComponent } from '@components/card-checkbox-item/card-checkbox-item.component';
 import { ProgressStatsComponent } from '@components/progress-stats/progress-stats.component';
+import { CollectionApiService } from '@services/collection-api.service';
 
 interface NarutoRarity {
   code: string;
@@ -56,32 +58,46 @@ export class NarutoSetDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private collectionApi: CollectionApiService,
   ) {}
 
   ngOnInit(): void {
     this.seriesId = this.route.snapshot.paramMap.get('seriesId') || '';
-    this.loadCollection();
-    this.loadSeriesData();
+    this.loadCollectionThenSeries();
+  }
+
+  private loadCollectionThenSeries(): void {
+    this.collectionApi.getCollection('naruto', this.seriesId).subscribe({
+      next: (entries) => {
+        this.collection = new Map(entries.filter((e) => e.quantity > 0).map((e) => [e.cardId, true]));
+        this.loadSeriesData();
+      },
+      error: (error) => {
+        console.error('Error al cargar la colección:', error);
+        this.loadSeriesData();
+      },
+    });
   }
 
   loadSeriesData(): void {
-    fetch('/assets/card-collection/naruto-sets.json')
-      .then((response) => response.json())
-      .then((data) => {
-        const foundSeries = data.series.find((s: NarutoSeries) => s.id === this.seriesId);
-        if (foundSeries) {
-          this.series = foundSeries;
+    this.collectionApi.getSets('naruto').subscribe({
+      next: (sets) => {
+        const found = sets.find((s) => s.externalId === this.seriesId);
+        if (found) {
+          const extra = (found.extra ?? {}) as { box?: string; rarities?: NarutoRarity[] };
+          this.series = { id: found.externalId, name: found.name, box: extra.box, rarities: extra.rarities ?? [] };
           this.generateCardsForRarities();
         } else {
           console.error('Serie no encontrada:', this.seriesId);
           this.goBack();
         }
-      })
-      .catch((error) => {
+      },
+      error: (error) => {
         console.error('Error al cargar las series de Naruto:', error);
         this.goBack();
-      });
+      },
+    });
   }
 
   generateCardsForRarities(): void {
@@ -104,50 +120,31 @@ export class NarutoSetDetailComponent implements OnInit {
     return `${seriesId}-${rarityCode}-${paddedNumber}`;
   }
 
-  loadCollection(): void {
-    const stored = localStorage.getItem(`naruto_collection_${this.seriesId}`);
-    if (stored) {
-      try {
-        const data = JSON.parse(stored);
-        this.collection = new Map();
-        // Solo cargar los valores que son true, limpiar los false
-        Object.entries(data).forEach(([key, value]) => {
-          if (value === true) {
-            this.collection.set(key, true);
-          }
-        });
-        // Guardar la colección limpia
-        this.saveCollection();
-      } catch (error) {
-        console.error('Error al cargar la colección:', error);
-        this.collection = new Map();
-      }
-    }
-  }
-
-  saveCollection(): void {
-    const obj = Object.fromEntries(this.collection);
-    localStorage.setItem(`naruto_collection_${this.seriesId}`, JSON.stringify(obj));
-  }
-
   onCardToggle(event: { cardCode: string; isOwned: boolean }): void {
-    if (event.isOwned) {
-      this.collection.set(event.cardCode, true);
-    } else {
-      this.collection.delete(event.cardCode);
-    }
-    this.saveCollection();
+    const request: Observable<unknown> = event.isOwned
+      ? this.collectionApi.upsertEntry('naruto', this.seriesId, event.cardCode, { quantity: 1 })
+      : this.collectionApi.deleteEntry('naruto', this.seriesId, event.cardCode);
 
-    // Actualizar el objeto card en el array para que Angular detecte el cambio
-    if (this.series) {
-      for (const rarity of this.series.rarities) {
-        const card = rarity.cards?.find((c) => c.code === event.cardCode);
-        if (card) {
-          card.isOwned = event.isOwned;
-          break;
+    request.subscribe({
+      next: () => {
+        if (event.isOwned) {
+          this.collection.set(event.cardCode, true);
+        } else {
+          this.collection.delete(event.cardCode);
         }
-      }
-    }
+
+        if (this.series) {
+          for (const rarity of this.series.rarities) {
+            const card = rarity.cards?.find((c) => c.code === event.cardCode);
+            if (card) {
+              card.isOwned = event.isOwned;
+              break;
+            }
+          }
+        }
+      },
+      error: (error) => console.error('Error al actualizar la colección:', error),
+    });
   }
 
   getRarityProgress(rarity: NarutoRarity): { owned: number; total: number; percentage: number } {
@@ -171,16 +168,22 @@ export class NarutoSetDetailComponent implements OnInit {
     const isComplete = this.isRarityComplete(rarity);
     const newState = !isComplete;
 
-    rarity.cards.forEach((card) => {
-      card.isOwned = newState;
-      if (newState) {
-        this.collection.set(card.code, true);
-      } else {
-        this.collection.delete(card.code);
-      }
-    });
+    const requests: Observable<unknown>[] = rarity.cards.map((card) =>
+      newState
+        ? this.collectionApi.upsertEntry('naruto', this.seriesId, card.code, { quantity: 1 })
+        : this.collectionApi.deleteEntry('naruto', this.seriesId, card.code),
+    );
 
-    this.saveCollection();
+    (requests.length ? forkJoin(requests) : of([])).subscribe(() => {
+      rarity.cards!.forEach((card) => {
+        card.isOwned = newState;
+        if (newState) {
+          this.collection.set(card.code, true);
+        } else {
+          this.collection.delete(card.code);
+        }
+      });
+    });
   }
 
   getTotalProgress(): { owned: number; total: number; percentage: number } {
@@ -222,19 +225,22 @@ export class NarutoSetDetailComponent implements OnInit {
 
     const search = searchText.toLowerCase().trim();
     return rarity.cards.filter((card) => {
-      // Extraer el número de la carta del código (ej: "ANHQV-N-001" -> "001")
       const cardNumber = card.code.split('-').pop() || '';
       return cardNumber.toLowerCase().includes(search);
     });
   }
 
   deleteCollection(): void {
-    if (confirm('¿Estás seguro de que quieres eliminar toda la colección de esta serie?')) {
+    if (!confirm('¿Estás seguro de que quieres eliminar toda la colección de esta serie?')) return;
+
+    const requests = Array.from(this.collection.keys()).map((cardCode) =>
+      this.collectionApi.deleteEntry('naruto', this.seriesId, cardCode),
+    );
+
+    (requests.length ? forkJoin(requests) : of([])).subscribe(() => {
       this.collection.clear();
-      this.saveCollection();
-      // Recargar los datos para actualizar las vistas
       this.generateCardsForRarities();
-    }
+    });
   }
 
   goBack(): void {

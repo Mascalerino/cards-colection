@@ -1,0 +1,41 @@
+<div class="login-container">
+  <form class="login-card" (ngSubmit)="onSubmit()">
+    <h1>Colección de Cartas</h1>
+    <p class="subtitle">Inicia sesión para acceder a tu colección</p>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Usuario</mat-label>
+      <input matInput name="username" [(ngModel)]="username" autocomplete="username" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Contraseña</mat-label>
+      <input
+        matInput
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        autocomplete="current-password"
+        required
+      />
+    </mat-form-field>
+
+    @if (errorMessage()) {
+      <p class="error-message">{{ errorMessage() }}</p>
+    }
+
+    <button
+      mat-raised-button
+      color="primary"
+      type="submit"
+      class="full-width"
+      [disabled]="loading() || !username || !password"
+    >
+      @if (loading()) {
+        <mat-spinner diameter="20"></mat-spinner>
+      } @else {
+        <span>Entrar</span>
+      }
+    </button>
+  </form>
+</div>

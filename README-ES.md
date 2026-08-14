@@ -1,158 +1,171 @@
-# Cards Collection - Aplicación Angular 19
+# Cards Collection
 
-Aplicación independiente para gestionar colecciones de cartas (Magic: The Gathering, Pokémon y Naruto).
+Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gathering, Pokémon, Naruto y One Piece), con backend propio, base de datos y login de usuario — pensada para autoalojarse (p. ej. en un NAS con Docker).
 
 ## 🚀 Características
 
-- **Magic: The Gathering**: Gestión completa de colecciones de cartas Magic con integración a Scryfall API
-- **Pokémon**: Sistema de gestión de colecciones Pokémon
-- **Naruto**: Gestión de colecciones de cartas Naruto con exportación a PDF
-- **Almacenamiento local**: Todas las colecciones se guardan en localStorage del navegador
-- **Importar/Exportar**: Funcionalidad para hacer backup y restaurar colecciones
-- **Búsqueda avanzada**: Sistema de búsqueda de cartas con filtros
-- **Estadísticas**: Visualización de progreso y estadísticas de colección
-- **Gestión de ventas**: Sistema para registrar ventas de cartas
+- **Magic: The Gathering**: gestión completa de colecciones con integración a Scryfall API (precios, imágenes, foil/nonfoil), exportación de duplicados a CSV compatible con Cardmarket y registro de ventas.
+- **Pokémon**: listado de sets y progreso.
+- **Naruto**: checklist de cartas por serie/rareza, con exportación a PDF (listado completo y cartas faltantes).
+- **One Piece**: sets y starter decks vía optcgapi.com, con precios de mercado.
+- **Login con usuario y contraseña**: sesión con JWT en cookie httpOnly.
+- **Persistencia en base de datos**: la colección de cada usuario vive en Postgres, no en el navegador — accesible desde cualquier dispositivo.
+- **Importar/Exportar**: backup y restauración de todas las colecciones en un único JSON.
+- **Búsqueda y filtros avanzados**, **estadísticas de progreso**.
+
+## 🏗️ Arquitectura
+
+```
+┌─────────────┐      /api/*      ┌─────────────┐      SQL      ┌────────────┐
+│  Angular 19 │ ───────────────▶ │   Backend    │ ─────────────▶│  Postgres  │
+│  (nginx)    │ ◀─────────────── │ Express + TS │ ◀─────────────│            │
+└─────────────┘                  └─────────────┘                └────────────┘
+                                        │
+                                        ▼
+                          Scryfall API / optcgapi.com
+                          (catálogo + precios, cacheados
+                           en BD con TTL de 7 días)
+```
+
+- El **frontend** nunca llama directamente a Scryfall/optcgapi ni guarda nada en `localStorage`: todo pasa por el backend.
+- El **backend** siembra el catálogo de cartas la primera vez que se pide un set, y solo vuelve a consultar precios cuando caducan (7 días).
+- Cada usuario tiene su propia colección y su propio historial de ventas en la base de datos.
 
 ## 📋 Requisitos
 
-- Node.js 18 o superior
-- npm 9 o superior
+- Docker y Docker Compose (para desplegar), **o** Node.js 20+ y Postgres 16+ (para desarrollo local sin Docker).
 
-## 🔧 Instalación
+## 🐳 Despliegue con Docker (recomendado, p. ej. en TrueNAS)
 
-Las dependencias ya están instaladas. Si necesitas reinstalarlas:
+1. Copia el archivo de variables de entorno y ajústalo:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Como mínimo cambia `DB_PASSWORD` y `JWT_SECRET` por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
+
+2. Levanta el stack:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+   Esto construye y arranca tres contenedores: `db` (Postgres), `backend` (API) y `frontend` (Angular servido por nginx, que además reenvía `/api` al backend). Las migraciones de base de datos se aplican automáticamente al arrancar el backend.
+
+3. Crea tu usuario (no hay registro público, por diseño):
+
+   ```bash
+   docker compose exec backend node dist/scripts/create-user.js -- --username tu_usuario --password tu_contraseña
+   ```
+
+4. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión.
+
+### Actualizar la aplicación
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Las migraciones pendientes se aplican solas en cada arranque del backend.
+
+### Backup
+
+Los datos viven en el volumen `db_data` de Docker (Postgres). Para un backup lógico:
+
+```bash
+docker compose exec db pg_dump -U <DB_USER> cards_collection > backup.sql
+```
+
+Además, desde la propia aplicación puedes exportar tu colección a un JSON en cualquier momento (botón "Exportar colecciones" en la página principal).
+
+## 🔧 Desarrollo local (sin Docker)
+
+### Backend
+
+```bash
+cd backend
+npm install
+cp .env.example .env   # apunta DATABASE_URL a tu Postgres local
+npm run db:migrate
+npm run create-user -- --username admin --password admin1234
+npm run dev             # http://localhost:3000
+```
+
+### Frontend
 
 ```bash
 npm install
+npm start                # http://localhost:4200, con proxy /api -> localhost:3000
 ```
 
-## 🎮 Uso
-
-### Iniciar servidor de desarrollo
-
-```bash
-npm start
-```
-
-La aplicación estará disponible en `http://localhost:4200/`
-
-### Compilar para producción
-
-```bash
-npm run build
-```
-
-Los archivos compilados estarán en el directorio `dist/`
-
-### Ejecutar tests
+### Tests
 
 ```bash
 npm test
 ```
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura del proyecto
 
 ```
-src/
-├── app/
-│   ├── components/          # Componentes reutilizables
-│   │   ├── add-card-dialog/
-│   │   ├── card-checkbox-item/
-│   │   ├── card-collection-counter/
-│   │   ├── card-detail-panel/
-│   │   ├── card-search/
-│   │   ├── progress-stats/
-│   │   ├── select-collections-dialog/
-│   │   ├── sell-cards-dialog/
-│   │   └── set-list/
-│   ├── models/              # Modelos de datos
-│   │   ├── card.model.ts
-│   │   ├── card-entry.model.ts
-│   │   ├── card-sale.model.ts
-│   │   └── card-set.model.ts
-│   ├── services/            # Servicios
-│   │   └── card-collection.service.ts
-│   ├── pages/               # Páginas principales
-│   │   ├── card-collection.component.*
-│   │   ├── magic-collections/
-│   │   ├── pokemon-collections/
-│   │   └── naruto-collections/
-│   └── app.routes.ts        # Configuración de rutas
-└── assets/
-    └── card-collection/     # Archivos JSON de configuración
-        ├── magic-sets.json
-        ├── pokemon-sets.json
-        └── naruto-sets.json
+.
+├── src/                      # Frontend (Angular 19, standalone components)
+│   ├── app/
+│   │   ├── components/        # Componentes reutilizables
+│   │   ├── guards/             # authGuard
+│   │   ├── interceptors/       # credentialsInterceptor
+│   │   ├── models/              # Modelos de datos
+│   │   ├── services/            # AuthService, CollectionApiService, SalesApiService...
+│   │   └── pages/                # Páginas (magic, pokemon, naruto, onepiece, login...)
+│   └── environments/
+├── backend/                  # Backend (Express + TypeScript + Drizzle ORM)
+│   └── src/
+│       ├── config/             # env, conexión a BD
+│       ├── db/                  # schema.ts + migraciones
+│       ├── middleware/          # auth, errores
+│       ├── modules/              # auth, cards, collection, sales, data-transfer
+│       ├── data/                  # JSON de sets estáticos (Magic/Pokémon/Naruto)
+│       └── scripts/create-user.ts
+├── docker-compose.yml
+├── Dockerfile                # frontend (build Angular + nginx)
+├── nginx.conf
+└── backend/Dockerfile
 ```
 
-## 🎯 Rutas Disponibles
+## 🎯 Rutas del frontend
 
-- `/` - Página principal con selector de tipo de colección
-- `/magic` - Colecciones de Magic: The Gathering
-- `/magic/:setId` - Detalle de una colección específica de Magic
-- `/pokemon` - Colecciones de Pokémon
-- `/naruto` - Colecciones de Naruto
-- `/naruto/:seriesId` - Detalle de una colección específica de Naruto
+- `/login` — inicio de sesión
+- `/` — página principal con selector de juego + export/import
+- `/magic`, `/magic/:setId`
+- `/pokemon`
+- `/naruto`, `/naruto/:seriesId`
+- `/onepiece`, `/onepiece/:setId`
 
-## 🛠️ Tecnologías Utilizadas
+Todas salvo `/login` requieren sesión iniciada.
 
-- **Angular 19**: Framework principal
-- **Angular Material 19**: Componentes UI
-- **RxJS 7**: Programación reactiva
-- **TypeScript 5.7**: Tipado estático
-- **SCSS**: Estilos
-- **jsPDF**: Generación de PDFs
-- **file-saver**: Descarga de archivos
-- **jszip**: Manejo de archivos ZIP
+## 🛠️ Tecnologías utilizadas
 
-## 💾 Almacenamiento de Datos
+**Frontend**: Angular 19, Angular Material, RxJS, TypeScript, SCSS, jsPDF.
 
-La aplicación utiliza localStorage del navegador para almacenar:
+**Backend**: Node.js, Express, TypeScript, Drizzle ORM, Postgres, JWT, bcrypt, Zod.
 
-- **Colecciones de cartas**: Con prefijos `collection_`, `naruto_collection_`, `pokemon_collection_`
-- **Metadatos**: Contadores de cartas (`ownedCards_`) e historial de ventas (`sales_`)
+**Infraestructura**: Docker, Docker Compose, nginx.
 
-### Exportar Colecciones
+## 🔍 Integración con APIs externas
 
-Desde la página principal, usa el botón "Exportar Colecciones" para descargar un archivo JSON con todas tus colecciones.
+Ambas se consultan **desde el backend**, nunca desde el navegador:
 
-### Importar Colecciones
-
-Desde la página principal, usa el botón "Importar Colecciones" para restaurar colecciones desde un archivo JSON previamente exportado.
-
-## 🎨 Sistema de Diseño
-
-La aplicación utiliza un sistema de diseño moderno con:
-
-- Variables CSS personalizadas para colores, espaciado y tipografía
-- Gradientes y sombras para efectos visuales
-- Transiciones suaves para mejor UX
-- Diseño responsive con Angular Material
-
-## 🔍 Integración con APIs
-
-### Scryfall API (Magic: The Gathering)
-
-La aplicación se integra con la API de Scryfall para obtener:
-- Listados completos de cartas por expansión
-- Imágenes de cartas en alta calidad
-- Precios actualizados
-- Información de rareza y coleccionabilidad
-
-## 📝 Notas Importantes
-
-- **Primer uso**: La primera vez que accedas a una colección, la aplicación descargará los datos desde las APIs externas
-- **Sin backend**: Esta aplicación funciona completamente en el navegador sin necesidad de servidor
-- **Backups recomendados**: Exporta tus colecciones regularmente para evitar pérdida de datos
+- **Scryfall API** (Magic): listados de cartas por expansión, imágenes, precios en EUR/USD.
+- **optcgapi.com** (One Piece): sets, starter decks, cartas y precios de mercado.
 
 ## 🤝 Contribuir
 
-Esta aplicación fue migrada desde el proyecto original `mascalerino`. Para contribuir:
-
-1. Crea una rama para tu feature
-2. Realiza tus cambios
-3. Asegúrate de que compila sin errores: `npm run build`
-4. Crea un commit con tus cambios
+1. Crea una rama para tu feature.
+2. Realiza tus cambios.
+3. Verifica que compila: `npm run build` (frontend) y `cd backend && npm run build` (backend).
+4. Si tocas el esquema de la base de datos: `cd backend && npm run db:generate` para generar la migración.
+5. Crea un commit con tus cambios.
 
 ## 📄 Licencia
 
@@ -161,20 +174,17 @@ Este proyecto es de código privado.
 ## 🐛 Troubleshooting
 
 ### La aplicación no carga
-- Verifica que el puerto 4200 no esté siendo usado
-- Limpia caché del navegador
-- Reinstala dependencias: `rm -rf node_modules && npm install`
+- Verifica que los contenedores estén arriba: `docker compose ps`
+- Revisa los logs: `docker compose logs -f backend` / `docker compose logs -f frontend`
+
+### No puedo iniciar sesión
+- Confirma que el usuario existe: créalo con `docker compose exec backend node dist/scripts/create-user.js -- --username ... --password ...`
+- Revisa que `JWT_SECRET` no haya cambiado entre despliegues (invalidaría las sesiones existentes, lo cual es normal y solo requiere volver a iniciar sesión).
 
 ### Las colecciones no se guardan
-- Verifica que el navegador permita localStorage
-- Asegúrate de no estar en modo incógnito
-- Revisa la consola del navegador para errores
+- Comprueba que el backend puede conectar con Postgres: `docker compose logs backend` debe mostrar "Migraciones aplicadas correctamente."
+- Revisa la consola del navegador (pestaña Network) para ver si las peticiones a `/api/...` devuelven error.
 
 ### Errores al compilar
-- Verifica la versión de Node.js: `node --version` (debe ser 18+)
-- Actualiza Angular CLI: `npm install -g @angular/cli@latest`
-- Limpia caché: `npm cache clean --force`
-
-## 📞 Soporte
-
-Para problemas o preguntas sobre la aplicación, revisa los logs de la consola del navegador para más detalles sobre posibles errores.
+- Verifica la versión de Node.js: `node --version` (debe ser 20+)
+- Limpia caché: `npm cache clean --force` y reinstala `node_modules`

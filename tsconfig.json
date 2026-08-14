@@ -23,7 +23,8 @@
       "@services/*": ["app/services/*"],
       "@components/*": ["app/components/*"],
       "@pages/*": ["app/pages/*"],
-      "@assets/*": ["assets/*"]
+      "@assets/*": ["assets/*"],
+      "@environments/*": ["environments/*"]
     }
   },
   "angularCompilerOptions": {
