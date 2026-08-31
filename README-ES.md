@@ -207,6 +207,10 @@ Este proyecto es de código privado.
 - Confirma que el usuario existe: créalo con `docker compose exec app node dist/scripts/create-user.js -- --username ... --password ...`
 - Revisa que `JWT_SECRET` no haya cambiado entre despliegues (invalidaría las sesiones existentes, lo cual es normal y solo requiere volver a iniciar sesión).
 
+### El login "funciona" pero cualquier acción (importar, ver una colección...) me devuelve 401 y me desloguea
+- Es el síntoma de que la cookie de sesión no se está guardando en el navegador. Comprueba con qué URL accedes: si es HTTP plano por IP o dominio local (no HTTPS, no `localhost`), asegúrate de tener la versión del backend que decide `COOKIE_SECURE` automáticamente por petición (no por `NODE_ENV`) — actualiza la imagen si es antigua.
+- Si accedes por HTTPS a través de un proxy inverso (Traefik, nginx-proxy-manager...), confirma que el proxy reenvía la cabecera `X-Forwarded-Proto: https`; si no, fuerza `COOKIE_SECURE=false` en `.env` como último recurso (perderás el flag `Secure`, aceptable solo si el tráfico entre el proxy y el contenedor es de confianza).
+
 ### Las colecciones no se guardan
 - Comprueba que el backend puede conectar con Postgres: `docker compose logs app` debe mostrar "Migraciones aplicadas correctamente."
 - Revisa la consola del navegador (pestaña Network) para ver si las peticiones a `/api/...` devuelven error.

@@ -23,6 +23,10 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30d}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       NODE_ENV: production
+      # Vacío => automático según el protocolo de cada petición: HTTPS detrás de un
+      # proxy lo detecta solo; en HTTP plano en la LAN (lo normal en un NAS) no marca
+      # la cookie de sesión como Secure, si no el navegador la descartaría.
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
       # Usuario admin creado en el primer arranque (ver README-ES.md).
       ADMIN_USER: ${ADMIN_USER:-admin}
       # Si se deja vacío, se genera una contraseña aleatoria y se imprime UNA vez

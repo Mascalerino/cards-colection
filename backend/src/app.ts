@@ -14,6 +14,11 @@ import { usersRouter } from './modules/users/users.routes.js';
 
 export const app = express();
 
+// Necesario para que req.secure refleje X-Forwarded-Proto cuando la app va detrás
+// de un proxy TLS (Traefik, nginx-proxy-manager, etc.) — ver cookieOptions() en
+// modules/auth/auth.controller.ts.
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: env.corsOrigin, credentials: true }));
 // El límite por defecto de Express (100kb) se queda corto para importar/exportar
 // una colección completa (varios sets de Magic con todas sus entradas).

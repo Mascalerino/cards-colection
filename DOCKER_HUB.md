@@ -99,6 +99,10 @@ That's the same `db` + `app` stack described above, just built locally instead o
 
 `ADMIN_USER`/`ADMIN_PASSWORD` only ever create the account **once**: if a user with that username already exists, the app leaves it untouched — so it's safe to keep them in `.env` (or the auto-generated one) across restarts and updates, they won't reset the password later. There is no public sign-up form; this is the only way to get a first account.
 
+## A note on HTTPS / plain HTTP (e.g. a NAS on your LAN)
+
+The session cookie decides on its own, per request, whether to mark itself `Secure` — it works out of the box both behind an HTTPS reverse proxy and over plain HTTP on a local network (the typical case for `http://192.168.x.x:8080` on a NAS). If you do put this behind a reverse proxy, make sure it forwards `X-Forwarded-Proto: https`. You only need to set `COOKIE_SECURE=true` or `COOKIE_SECURE=false` in `.env` if you want to force one behavior regardless of the request.
+
 ## Adding more users (admin panel)
 
 Once logged in as an admin, open the **Administration** panel (top-left button on the main page). From there an admin can:
