@@ -14,6 +14,12 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
     return;
   }
 
+  // Errores de middlewares de Express (p.ej. body-parser con PayloadTooLargeError)
+  // ya traen su propio status HTTP; respétalo en vez de devolver siempre 500.
+  const status =
+    typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number'
+      ? err.status
+      : 500;
   const message = err instanceof Error ? err.message : 'Error interno del servidor';
-  res.status(500).json({ error: message });
+  res.status(status).json({ error: message });
 }
