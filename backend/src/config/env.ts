@@ -19,8 +19,8 @@ export const env = {
   // Directorio con el build estático de Angular; si está definido, el backend
   // lo sirve directamente (imagen Docker única, sin nginx por delante).
   frontendDist: process.env.FRONTEND_DIST,
-  // Si se definen, se crea este usuario como admin al arrancar (si no existe ya).
+  // Si se define, se crea este usuario como admin al arrancar (si no existe ya).
   // Permite dar de alta el primer administrador desde docker-compose sin `create-user`.
-  adminUsername: process.env.ADMIN_USERNAME,
+  adminUsername: process.env.ADMIN_USER,
   adminPassword: process.env.ADMIN_PASSWORD,
 };

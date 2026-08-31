@@ -137,7 +137,7 @@ JWT en cookie httpOnly (`cc_token`, 30 días), sin registro público. Cada usuar
 
 Formas de crear usuarios:
 - `npm run create-user -- --username <u> --password <p> [--role admin|user]` (CLI, rol `user` por defecto).
-- Variables de entorno `ADMIN_USERNAME`/`ADMIN_PASSWORD`: si `ADMIN_USERNAME` está definido (en `docker-compose*.yml` tiene default `admin`), `ensureBootstrapAdmin()` (`modules/auth/auth.service.ts`, llamado desde `index.ts` antes de `app.listen`) crea ese usuario como admin la primera vez que arranca el proceso, sin tocar la contraseña si ya existe. Si `ADMIN_PASSWORD` se deja vacío, se genera una aleatoria (`crypto.randomBytes`) y se imprime una única vez en el log del contenedor. Pensado para el primer admin en Docker sin tener que ejecutar el script a mano ni depender de `.env`.
+- Variables de entorno `ADMIN_USER`/`ADMIN_PASSWORD`: si `ADMIN_USER` está definido (en `docker-compose*.yml` tiene default `admin`), `ensureBootstrapAdmin()` (`modules/auth/auth.service.ts`, llamado desde `index.ts` antes de `app.listen`) crea ese usuario como admin la primera vez que arranca el proceso, sin tocar la contraseña si ya existe. Si `ADMIN_PASSWORD` se deja vacío, se genera una aleatoria (`crypto.randomBytes`) y se imprime una única vez en el log del contenedor. Pensado para el primer admin en Docker sin tener que ejecutar el script a mano ni depender de `.env`.
 - Desde el panel de administración del frontend (`/admin`, solo visible/accesible para `role = 'admin'`), que llama a `/api/admin/users`.
 
 ### Modelos de datos

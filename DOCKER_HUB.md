@@ -43,13 +43,13 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
    JWT_EXPIRES_IN=30d
    CORS_ORIGIN=http://localhost:8080
    APP_PORT=8080
-   ADMIN_USERNAME=admin
+   ADMIN_USER=admin
    ADMIN_PASSWORD=
    ```
 
    - `CORS_ORIGIN` must match the URL you'll actually use to open the app (e.g. `http://192.168.1.50:8080` if you're running this on a home server/NAS).
    - `APP_PORT` is the port exposed on the host.
-   - `ADMIN_USERNAME`/`ADMIN_PASSWORD` are **optional** — `docker-compose.hub.yml` already defaults `ADMIN_USERNAME` to `admin`, and if you leave `ADMIN_PASSWORD` empty the app generates a random one and prints it once in the logs (step 4 below). Set them yourself here only if you'd rather choose the password up front.
+   - `ADMIN_USER`/`ADMIN_PASSWORD` are **optional** — `docker-compose.hub.yml` already defaults `ADMIN_USER` to `admin`, and if you leave `ADMIN_PASSWORD` empty the app generates a random one and prints it once in the logs (step 4 below). Set them yourself here only if you'd rather choose the password up front.
 
 3. Start the stack:
 
@@ -82,7 +82,7 @@ The build needs no arguments and no external services — it only touches the ne
 To run it, use the repo's own `docker-compose.yml` (it builds instead of pulling):
 
 ```bash
-cp .env.example .env   # then edit DB_PASSWORD, JWT_SECRET, ADMIN_USERNAME/ADMIN_PASSWORD, etc.
+cp .env.example .env   # then edit DB_PASSWORD, JWT_SECRET, ADMIN_USER/ADMIN_PASSWORD, etc.
 docker compose up -d --build
 ```
 
@@ -94,10 +94,10 @@ That's the same `db` + `app` stack described above, just built locally instead o
 |---|---|---|---|
 | Database password | **Required**, no default | `.env`, before starting the stack | `DB_PASSWORD=...` |
 | JWT signing secret | **Required**, no default | `.env`, before starting the stack | `JWT_SECRET=...` |
-| Admin username (first account) | Optional — defaults to `admin` | `docker-compose.hub.yml` default, override in `.env` if you want a different one | `ADMIN_USERNAME=...` |
+| Admin username (first account) | Optional — defaults to `admin` | `docker-compose.hub.yml` default, override in `.env` if you want a different one | `ADMIN_USER=...` |
 | Admin password (first account) | Optional — auto-generated and logged if left empty | `.env`, or just leave it blank | `ADMIN_PASSWORD=...` |
 
-`ADMIN_USERNAME`/`ADMIN_PASSWORD` only ever create the account **once**: if a user with that username already exists, the app leaves it untouched — so it's safe to keep them in `.env` (or the auto-generated one) across restarts and updates, they won't reset the password later. There is no public sign-up form; this is the only way to get a first account.
+`ADMIN_USER`/`ADMIN_PASSWORD` only ever create the account **once**: if a user with that username already exists, the app leaves it untouched — so it's safe to keep them in `.env` (or the auto-generated one) across restarts and updates, they won't reset the password later. There is no public sign-up form; this is the only way to get a first account.
 
 ## Adding more users (admin panel)
 

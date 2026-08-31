@@ -44,9 +44,9 @@ export async function createUser(username: string, plainPassword: string, role: 
 }
 
 /**
- * Crea el usuario administrador inicial a partir de ADMIN_USERNAME/ADMIN_PASSWORD
+ * Crea el usuario administrador inicial a partir de ADMIN_USER/ADMIN_PASSWORD
  * si no existe todavía. Pensado para arrancar el contenedor sin tener que ejecutar
- * `create-user` a mano. No hace nada si ADMIN_USERNAME no está definido o si ese
+ * `create-user` a mano. No hace nada si ADMIN_USER no está definido o si ese
  * usuario ya existe (nunca sobrescribe la contraseña de una cuenta existente).
  *
  * Si ADMIN_PASSWORD se deja vacío, se genera una contraseña aleatoria y se
@@ -71,6 +71,6 @@ export async function ensureBootstrapAdmin() {
     console.log('Guárdala ahora: no se volverá a mostrar ni se guarda en ningún sitio.');
     console.log('='.repeat(64));
   } else {
-    console.log(`Usuario administrador "${adminUsername}" creado a partir de ADMIN_USERNAME/ADMIN_PASSWORD.`);
+    console.log(`Usuario administrador "${adminUsername}" creado a partir de ADMIN_USER/ADMIN_PASSWORD.`);
   }
 }

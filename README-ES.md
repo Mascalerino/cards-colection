@@ -48,7 +48,7 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
 
    `DB_PASSWORD` y `JWT_SECRET` son **obligatorios** (sin valor por defecto: el backend no arranca sin ellos) — cámbialos por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
 
-   `ADMIN_USERNAME`/`ADMIN_PASSWORD` son **opcionales**: `docker-compose.yml` ya usa `admin` como usuario por defecto, y si dejas `ADMIN_PASSWORD` vacío la app genera una contraseña aleatoria y la muestra una vez en los logs (paso 3). Ponla tú en `.env` solo si prefieres elegirla de antemano.
+   `ADMIN_USER`/`ADMIN_PASSWORD` son **opcionales**: `docker-compose.yml` ya usa `admin` como usuario por defecto, y si dejas `ADMIN_PASSWORD` vacío la app genera una contraseña aleatoria y la muestra una vez en los logs (paso 3). Ponla tú en `.env` solo si prefieres elegirla de antemano.
 
 2. Levanta el stack:
 
