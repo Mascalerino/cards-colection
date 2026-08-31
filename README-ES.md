@@ -16,18 +16,20 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
 ## 🏗️ Arquitectura
 
 ```
-┌─────────────┐      /api/*      ┌─────────────┐      SQL      ┌────────────┐
-│  Angular 19 │ ───────────────▶ │   Backend    │ ─────────────▶│  Postgres  │
-│  (nginx)    │ ◀─────────────── │ Express + TS │ ◀─────────────│            │
-└─────────────┘                  └─────────────┘                └────────────┘
-                                        │
-                                        ▼
-                          Scryfall API / optcgapi.com
-                          (catálogo + precios, cacheados
-                           en BD con TTL de 7 días)
+┌───────────────────────────────┐      SQL      ┌────────────┐
+│         app (contenedor)       │ ─────────────▶│  Postgres  │
+│  Angular 19 (estático) servido  │ ◀─────────────│            │
+│  por el propio Express + TS     │                └────────────┘
+└───────────────────────────────┘
+                │
+                ▼
+  Scryfall API / optcgapi.com
+  (catálogo + precios, cacheados
+   en BD con TTL de 7 días)
 ```
 
 - El **frontend** nunca llama directamente a Scryfall/optcgapi ni guarda nada en `localStorage`: todo pasa por el backend.
+- El **backend** sirve tanto la API (`/api/*`) como el build estático de Angular (fallback SPA para el resto de rutas) — mismo proceso, mismo origen, sin nginx ni problemas de CORS.
 - El **backend** siembra el catálogo de cartas la primera vez que se pide un set, y solo vuelve a consultar precios cuando caducan (7 días).
 - Cada usuario tiene su propia colección y su propio historial de ventas en la base de datos.
 
@@ -51,12 +53,12 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
    docker compose up -d --build
    ```
 
-   Esto construye y arranca tres contenedores: `db` (Postgres), `backend` (API) y `frontend` (Angular servido por nginx, que además reenvía `/api` al backend). Las migraciones de base de datos se aplican automáticamente al arrancar el backend.
+   Esto construye y arranca dos contenedores: `db` (Postgres) y `app` (frontend + backend en una sola imagen). Las migraciones de base de datos se aplican automáticamente al arrancar `app`.
 
 3. Crea tu usuario (no hay registro público, por diseño):
 
    ```bash
-   docker compose exec backend node dist/scripts/create-user.js -- --username tu_usuario --password tu_contraseña
+   docker compose exec app node dist/scripts/create-user.js -- --username tu_usuario --password tu_contraseña
    ```
 
 4. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión.
@@ -69,6 +71,17 @@ docker compose up -d --build
 ```
 
 Las migraciones pendientes se aplican solas en cada arranque del backend.
+
+### Usar la imagen publicada en Docker Hub (sin compilar en local)
+
+La imagen `tallon43/cards-collection` se publica en Docker Hub. En vez del `docker-compose.yml` de este repo (que compila con `build: .`), puedes usar `docker-compose.hub.yml` (renómbralo a `docker-compose.yml`), que tira directamente de la imagen ya construida:
+
+```bash
+docker compose -f docker-compose.hub.yml pull
+docker compose -f docker-compose.hub.yml up -d
+```
+
+Ver `DOCKER_HUB.md` para las instrucciones completas (en inglés, pensadas para pegar en la página del repo de Docker Hub).
 
 ### Backup
 
@@ -128,9 +141,9 @@ npm test
 │       ├── data/                  # JSON de sets estáticos (Magic/Pokémon/Naruto)
 │       └── scripts/create-user.ts
 ├── docker-compose.yml
-├── Dockerfile                # frontend (build Angular + nginx)
-├── nginx.conf
-└── backend/Dockerfile
+├── docker-compose.hub.yml    # variante que usa la imagen ya publicada en Docker Hub
+├── Dockerfile                # imagen única: build Angular + backend, Express sirve ambos
+└── DOCKER_HUB.md             # texto (en inglés) para la página de Docker Hub
 ```
 
 ## 🎯 Rutas del frontend
@@ -150,7 +163,7 @@ Todas salvo `/login` requieren sesión iniciada.
 
 **Backend**: Node.js, Express, TypeScript, Drizzle ORM, Postgres, JWT, bcrypt, Zod.
 
-**Infraestructura**: Docker, Docker Compose, nginx.
+**Infraestructura**: Docker, Docker Compose (imagen única: Express sirve API + frontend estático).
 
 ## 🔍 Integración con APIs externas
 
@@ -175,14 +188,14 @@ Este proyecto es de código privado.
 
 ### La aplicación no carga
 - Verifica que los contenedores estén arriba: `docker compose ps`
-- Revisa los logs: `docker compose logs -f backend` / `docker compose logs -f frontend`
+- Revisa los logs: `docker compose logs -f app`
 
 ### No puedo iniciar sesión
-- Confirma que el usuario existe: créalo con `docker compose exec backend node dist/scripts/create-user.js -- --username ... --password ...`
+- Confirma que el usuario existe: créalo con `docker compose exec app node dist/scripts/create-user.js -- --username ... --password ...`
 - Revisa que `JWT_SECRET` no haya cambiado entre despliegues (invalidaría las sesiones existentes, lo cual es normal y solo requiere volver a iniciar sesión).
 
 ### Las colecciones no se guardan
-- Comprueba que el backend puede conectar con Postgres: `docker compose logs backend` debe mostrar "Migraciones aplicadas correctamente."
+- Comprueba que el backend puede conectar con Postgres: `docker compose logs app` debe mostrar "Migraciones aplicadas correctamente."
 - Revisa la consola del navegador (pestaña Network) para ver si las peticiones a `/api/...` devuelven error.
 
 ### Errores al compilar

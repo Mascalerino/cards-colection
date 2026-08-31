@@ -16,4 +16,7 @@ export const env = {
   cookieName: 'cc_token',
   isProduction: process.env.NODE_ENV === 'production',
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:4200',
+  // Directorio con el build estático de Angular; si está definido, el backend
+  // lo sirve directamente (imagen Docker única, sin nginx por delante).
+  frontendDist: process.env.FRONTEND_DIST,
 };

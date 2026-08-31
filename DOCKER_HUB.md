@@ -2,10 +2,9 @@
 
 Self-hosted web app to track your trading card collections — **Magic: The Gathering**, **Pokémon**, **Naruto** and **One Piece** — with login, a real database (no localStorage) and price data cached from Scryfall / optcgapi.com.
 
-This page describes the **frontend** image (`tallon43/cards-collection-frontend`). It's built together with a **backend** image (`tallon43/cards-collection-backend`) and a Postgres database — the three run as one stack via Docker Compose.
+This single image bundles the Angular frontend and the Express/TypeScript backend/API together. It only needs a Postgres database alongside it, run as a separate container via Docker Compose.
 
-- Frontend: `tallon43/cards-collection-frontend`
-- Backend: `tallon43/cards-collection-backend`
+- Image: `tallon43/cards-collection`
 - Source: https://github.com/Mascalerino/cards-colection
 
 ## Features
@@ -54,12 +53,12 @@ This page describes the **frontend** image (`tallon43/cards-collection-frontend`
    docker compose up -d
    ```
 
-   This pulls and starts three containers: `db` (Postgres), `backend` (the API) and `frontend` (this image, served by nginx, which also proxies `/api` to the backend). Database migrations run automatically when the backend starts.
+   This pulls and starts two containers: `db` (Postgres) and `app` (this image — frontend + backend together). Database migrations run automatically when the app starts.
 
 4. Create your user account — there is no public registration, by design:
 
    ```bash
-   docker compose exec backend node dist/scripts/create-user.js -- --username youruser --password yourpassword
+   docker compose exec app node dist/scripts/create-user.js -- --username youruser --password yourpassword
    ```
 
 5. Open `http://<your-server>:8080` and log in.
@@ -71,7 +70,7 @@ docker compose pull
 docker compose up -d
 ```
 
-Migrations are applied automatically on backend startup, so it's safe to update at any time.
+Migrations are applied automatically on startup, so it's safe to update at any time.
 
 ## Data persistence
 

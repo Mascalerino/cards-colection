@@ -14,8 +14,8 @@ services:
       timeout: 5s
       retries: 10
 
-  backend:
-    image: tallon43/cards-collection-backend:latest
+  app:
+    image: tallon43/cards-collection:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/cards_collection
@@ -23,17 +23,11 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-30d}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080}
       NODE_ENV: production
+    ports:
+      - "${APP_PORT:-8080}:3000"
     depends_on:
       db:
         condition: service_healthy
-
-  frontend:
-    image: tallon43/cards-collection-frontend:latest
-    restart: unless-stopped
-    depends_on:
-      - backend
-    ports:
-      - "${APP_PORT:-8080}:80"
 
 volumes:
   db_data:

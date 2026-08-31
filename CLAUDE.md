@@ -44,7 +44,7 @@ npm run create-user -- --username <u> --password <p>  # crea un usuario (no hay 
 ```bash
 cp .env.example .env   # ajustar DB_PASSWORD, JWT_SECRET, etc.
 docker compose up -d --build
-docker compose exec backend node dist/scripts/create-user.js -- --username admin --password ...
+docker compose exec app node dist/scripts/create-user.js -- --username admin --password ...
 ```
 
 Ver `README-ES.md` para el detalle de despliegue (pensado para TrueNAS).
@@ -144,6 +144,6 @@ Los JSON de sets de Magic/Pokémon/Naruto viven **duplicados** en `src/assets/ca
 
 ## Docker
 
-- `Dockerfile` (raíz): build de Angular + nginx sirviendo `dist/cards-collection/browser`, con `nginx.conf` proxeando `/api/` al servicio `backend` (mismo origen desde el navegador, sin problemas de CORS ni de cookies cross-site).
-- `backend/Dockerfile`: build de Node, aplica migraciones automáticamente al arrancar el contenedor (`node dist/db/migrate.js && node dist/index.js`).
-- `docker-compose.yml`: orquesta `db` (Postgres), `backend` y `frontend`.
+- `Dockerfile` (raíz): imagen única multi-stage que compila el frontend (Angular) y el backend (Express/TS) y los empaqueta juntos; en runtime el propio Express sirve el estático de `dist/cards-collection/browser` (variable `FRONTEND_DIST`) además de la API, con fallback SPA para cualquier ruta que no sea `/api/*` — no hay nginx de por medio. Aplica migraciones automáticamente al arrancar el contenedor (`node dist/db/migrate.js && node dist/index.js`).
+- `docker-compose.yml`: orquesta `db` (Postgres) y `app` (la imagen única de arriba).
+- `docker-compose.hub.yml` + `DOCKER_HUB.md`: variante que tira de la imagen ya publicada en Docker Hub (`tallon43/cards-collection`) en vez de construirla; `DOCKER_HUB.md` es el texto en inglés pensado para pegar en la página de Docker Hub.
