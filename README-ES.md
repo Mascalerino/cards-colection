@@ -46,9 +46,9 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
    cp .env.example .env
    ```
 
-   Como mínimo cambia `DB_PASSWORD`, `JWT_SECRET` y `ADMIN_PASSWORD` por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
+   `DB_PASSWORD` y `JWT_SECRET` son **obligatorios** (sin valor por defecto: el backend no arranca sin ellos) — cámbialos por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
 
-   `ADMIN_USERNAME`/`ADMIN_PASSWORD` crean tu primer usuario automáticamente la primera vez que arranca la app (con rol admin) — no hay registro público, por diseño. Solo se usan para crear esa cuenta la primera vez: si el usuario ya existe, no se toca su contraseña en arranques posteriores.
+   `ADMIN_USERNAME`/`ADMIN_PASSWORD` son **opcionales**: `docker-compose.yml` ya usa `admin` como usuario por defecto, y si dejas `ADMIN_PASSWORD` vacío la app genera una contraseña aleatoria y la muestra una vez en los logs (paso 3). Ponla tú en `.env` solo si prefieres elegirla de antemano.
 
 2. Levanta el stack:
 
@@ -58,7 +58,13 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
 
    Esto construye y arranca dos contenedores: `db` (Postgres) y `app` (frontend + backend en una sola imagen). Las migraciones de base de datos y la creación del usuario admin se aplican automáticamente al arrancar `app`.
 
-3. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión con `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
+3. Consigue las credenciales del admin e inicia sesión:
+
+   ```bash
+   docker compose logs app | grep -A3 "Usuario administrador"
+   ```
+
+   Si pusiste tú `ADMIN_PASSWORD` en `.env`, usa esa. Si no, copia la contraseña generada que aparece en los logs — solo se muestra esa vez. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión.
 
 ### Añadir más usuarios
 

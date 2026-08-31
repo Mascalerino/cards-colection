@@ -34,7 +34,7 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
    curl -L -o .env https://raw.githubusercontent.com/Mascalerino/cards-colection/main/.env.example
    ```
 
-2. Edit `.env` and set your own values — at minimum change `DB_PASSWORD` and `JWT_SECRET`:
+2. Edit `.env` and set your own values — **at minimum change `DB_PASSWORD` and `JWT_SECRET`**, those two have no default and the app refuses to start without them:
 
    ```env
    DB_USER=cards
@@ -44,12 +44,12 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
    CORS_ORIGIN=http://localhost:8080
    APP_PORT=8080
    ADMIN_USERNAME=admin
-   ADMIN_PASSWORD=change-this-password-too
+   ADMIN_PASSWORD=
    ```
 
    - `CORS_ORIGIN` must match the URL you'll actually use to open the app (e.g. `http://192.168.1.50:8080` if you're running this on a home server/NAS).
    - `APP_PORT` is the port exposed on the host.
-   - `ADMIN_USERNAME`/`ADMIN_PASSWORD` create your first account automatically the first time the app starts (see below) — there is no public registration.
+   - `ADMIN_USERNAME`/`ADMIN_PASSWORD` are **optional** — `docker-compose.hub.yml` already defaults `ADMIN_USERNAME` to `admin`, and if you leave `ADMIN_PASSWORD` empty the app generates a random one and prints it once in the logs (step 4 below). Set them yourself here only if you'd rather choose the password up front.
 
 3. Start the stack:
 
@@ -59,7 +59,13 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
 
    This pulls and starts two containers: `db` (Postgres) and `app` (this image — frontend + backend together). Database migrations run automatically when the app starts, and so does your admin account.
 
-4. Open `http://<your-server>:8080` and log in with `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
+4. Get your admin credentials and log in:
+
+   ```bash
+   docker compose logs app | grep -A3 "Usuario administrador"
+   ```
+
+   If you set `ADMIN_PASSWORD` yourself in `.env`, use that. Otherwise copy the generated password shown in the logs — it's only ever printed that one time. Open `http://<your-server>:8080` and log in.
 
 ## Building the image yourself
 
@@ -84,15 +90,14 @@ That's the same `db` + `app` stack described above, just built locally instead o
 
 ## Passwords & secrets — where each one goes
 
-There are **three different passwords/secrets**, set in two different places:
+| What | Required? | Where | Variable |
+|---|---|---|---|
+| Database password | **Required**, no default | `.env`, before starting the stack | `DB_PASSWORD=...` |
+| JWT signing secret | **Required**, no default | `.env`, before starting the stack | `JWT_SECRET=...` |
+| Admin username (first account) | Optional — defaults to `admin` | `docker-compose.hub.yml` default, override in `.env` if you want a different one | `ADMIN_USERNAME=...` |
+| Admin password (first account) | Optional — auto-generated and logged if left empty | `.env`, or just leave it blank | `ADMIN_PASSWORD=...` |
 
-| What | Where | Variable / command |
-|---|---|---|
-| Database password | `.env` file, before starting the stack | `DB_PASSWORD=...` |
-| JWT signing secret | `.env` file, before starting the stack | `JWT_SECRET=...` |
-| Your admin login (first account) | `.env` file, before starting the stack — created automatically on first boot | `ADMIN_USERNAME=...` / `ADMIN_PASSWORD=...` |
-
-`ADMIN_USERNAME`/`ADMIN_PASSWORD` only create the account **once**: if a user with that username already exists, the app leaves it untouched (so it's safe to keep those variables in `.env` across restarts/updates — they won't reset the password later). There is no public sign-up form.
+`ADMIN_USERNAME`/`ADMIN_PASSWORD` only ever create the account **once**: if a user with that username already exists, the app leaves it untouched — so it's safe to keep them in `.env` (or the auto-generated one) across restarts and updates, they won't reset the password later. There is no public sign-up form; this is the only way to get a first account.
 
 ## Adding more users (admin panel)
 

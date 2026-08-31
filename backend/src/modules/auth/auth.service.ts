@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db } from '../../config/db.js';
 import { users, type UserRole } from '../../db/schema.js';
@@ -45,16 +46,31 @@ export async function createUser(username: string, plainPassword: string, role: 
 /**
  * Crea el usuario administrador inicial a partir de ADMIN_USERNAME/ADMIN_PASSWORD
  * si no existe todavía. Pensado para arrancar el contenedor sin tener que ejecutar
- * `create-user` a mano. No hace nada si las variables no están definidas o si el
+ * `create-user` a mano. No hace nada si ADMIN_USERNAME no está definido o si ese
  * usuario ya existe (nunca sobrescribe la contraseña de una cuenta existente).
+ *
+ * Si ADMIN_PASSWORD se deja vacío, se genera una contraseña aleatoria y se
+ * imprime UNA sola vez en el log del contenedor (no se guarda en ningún sitio).
  */
 export async function ensureBootstrapAdmin() {
   const { adminUsername, adminPassword } = env;
-  if (!adminUsername || !adminPassword) return;
+  if (!adminUsername) return;
 
   const existing = await findUserByUsername(adminUsername);
   if (existing) return;
 
-  await createUser(adminUsername, adminPassword, 'admin');
-  console.log(`Usuario administrador "${adminUsername}" creado a partir de ADMIN_USERNAME/ADMIN_PASSWORD.`);
+  const generated = !adminPassword;
+  const password = adminPassword || crypto.randomBytes(9).toString('base64url');
+
+  await createUser(adminUsername, password, 'admin');
+
+  if (generated) {
+    console.log('='.repeat(64));
+    console.log(`Usuario administrador creado: ${adminUsername}`);
+    console.log(`Contraseña generada automáticamente: ${password}`);
+    console.log('Guárdala ahora: no se volverá a mostrar ni se guarda en ningún sitio.');
+    console.log('='.repeat(64));
+  } else {
+    console.log(`Usuario administrador "${adminUsername}" creado a partir de ADMIN_USERNAME/ADMIN_PASSWORD.`);
+  }
 }
