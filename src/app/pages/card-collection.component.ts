@@ -19,6 +19,7 @@ export class CardCollectionComponent {
   private readonly authService = inject(AuthService);
 
   readonly currentUser = this.authService.currentUser;
+  readonly isAdmin = this.authService.isAdmin;
 
   formatDate(date: Date): string {
     const day = date.getDate().toString().padStart(2, '0');
@@ -41,6 +42,10 @@ export class CardCollectionComponent {
 
   navigateToOnePiece() {
     this.router.navigate(['/onepiece']);
+  }
+
+  navigateToAdmin() {
+    this.router.navigate(['/admin']);
   }
 
   logout(): void {

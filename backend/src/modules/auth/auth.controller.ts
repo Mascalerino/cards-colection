@@ -30,9 +30,9 @@ export async function login(req: Request, res: Response) {
     return;
   }
 
-  const token = signToken(user.id, user.username);
+  const token = signToken(user.id, user.username, user.role);
   res.cookie(env.cookieName, token, cookieOptions);
-  res.json({ id: user.id, username: user.username });
+  res.json({ id: user.id, username: user.username, role: user.role });
 }
 
 export function logout(_req: Request, res: Response) {
@@ -52,5 +52,5 @@ export async function me(req: Request, res: Response) {
     return;
   }
 
-  res.json({ id: user.id, username: user.username });
+  res.json({ id: user.id, username: user.username, role: user.role });
 }

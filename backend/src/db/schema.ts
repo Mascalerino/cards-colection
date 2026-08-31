@@ -12,10 +12,14 @@ import {
 // 'magic' | 'pokemon' | 'naruto' | 'onepiece'
 export type Game = 'magic' | 'pokemon' | 'naruto' | 'onepiece';
 
+// 'admin' puede gestionar usuarios desde el panel de administración; 'user' es una cuenta normal.
+export type UserRole = 'admin' | 'user';
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  role: text('role').notNull().default('user').$type<UserRole>(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

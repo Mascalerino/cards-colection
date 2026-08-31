@@ -1,0 +1,103 @@
+<div class="admin-container">
+  <button mat-button class="back-button" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Volver
+  </button>
+
+  <h1>Administración de usuarios</h1>
+
+  @if (errorMessage(); as error) {
+    <p class="error-message">{{ error }}</p>
+  }
+
+  <div class="new-user-card">
+    <h2>Nuevo usuario</h2>
+    <form class="new-user-form" (ngSubmit)="createUser()">
+      <mat-form-field appearance="outline">
+        <mat-label>Usuario</mat-label>
+        <input matInput name="newUsername" [(ngModel)]="newUsername" required />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contraseña</mat-label>
+        <input matInput type="password" name="newPassword" [(ngModel)]="newPassword" required minlength="8" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rol</mat-label>
+        <mat-select name="newRole" [(ngModel)]="newRole">
+          <mat-option value="user">Usuario</mat-option>
+          <mat-option value="admin">Administrador</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="creating()">
+        @if (creating()) {
+          <mat-spinner diameter="20"></mat-spinner>
+        } @else {
+          <ng-container>
+            <mat-icon>person_add</mat-icon>
+            Crear usuario
+          </ng-container>
+        }
+      </button>
+    </form>
+
+    @if (createError(); as error) {
+      <p class="error-message">{{ error }}</p>
+    }
+  </div>
+
+  <div class="users-card">
+    <h2>Usuarios existentes</h2>
+
+    @if (loading()) {
+      <div class="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+      </div>
+    } @else {
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Creado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>{{ user.username }}</td>
+              <td>
+                <span class="role-badge" [class.admin]="user.role === 'admin'">
+                  {{ user.role === 'admin' ? 'Administrador' : 'Usuario' }}
+                </span>
+              </td>
+              <td>{{ user.createdAt | date: 'dd-MM-yyyy' }}</td>
+              <td class="actions">
+                <button
+                  mat-button
+                  [disabled]="isSelf(user)"
+                  (click)="toggleRole(user)"
+                  [title]="isSelf(user) ? 'No puedes cambiar tu propio rol' : ''"
+                >
+                  {{ user.role === 'admin' ? 'Quitar admin' : 'Hacer admin' }}
+                </button>
+                <button
+                  mat-button
+                  color="warn"
+                  [disabled]="isSelf(user)"
+                  (click)="deleteUser(user)"
+                  [title]="isSelf(user) ? 'No puedes eliminar tu propia cuenta' : ''"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

@@ -9,6 +9,7 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
 - **Naruto**: checklist de cartas por serie/rareza, con exportación a PDF (listado completo y cartas faltantes).
 - **One Piece**: sets y starter decks vía optcgapi.com, con precios de mercado.
 - **Login con usuario y contraseña**: sesión con JWT en cookie httpOnly.
+- **Roles de usuario**: los administradores tienen un panel propio para crear, ascender/degradar y borrar usuarios; los usuarios normales solo gestionan su propia colección.
 - **Persistencia en base de datos**: la colección de cada usuario vive en Postgres, no en el navegador — accesible desde cualquier dispositivo.
 - **Importar/Exportar**: backup y restauración de todas las colecciones en un único JSON.
 - **Búsqueda y filtros avanzados**, **estadísticas de progreso**.
@@ -45,7 +46,9 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
    cp .env.example .env
    ```
 
-   Como mínimo cambia `DB_PASSWORD` y `JWT_SECRET` por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
+   Como mínimo cambia `DB_PASSWORD`, `JWT_SECRET` y `ADMIN_PASSWORD` por valores propios. `CORS_ORIGIN` y `APP_PORT` puedes dejarlos si vas a acceder por `http://<tu-nas>:8080`.
+
+   `ADMIN_USERNAME`/`ADMIN_PASSWORD` crean tu primer usuario automáticamente la primera vez que arranca la app (con rol admin) — no hay registro público, por diseño. Solo se usan para crear esa cuenta la primera vez: si el usuario ya existe, no se toca su contraseña en arranques posteriores.
 
 2. Levanta el stack:
 
@@ -53,15 +56,19 @@ Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gath
    docker compose up -d --build
    ```
 
-   Esto construye y arranca dos contenedores: `db` (Postgres) y `app` (frontend + backend en una sola imagen). Las migraciones de base de datos se aplican automáticamente al arrancar `app`.
+   Esto construye y arranca dos contenedores: `db` (Postgres) y `app` (frontend + backend en una sola imagen). Las migraciones de base de datos y la creación del usuario admin se aplican automáticamente al arrancar `app`.
 
-3. Crea tu usuario (no hay registro público, por diseño):
+3. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión con `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
 
-   ```bash
-   docker compose exec app node dist/scripts/create-user.js -- --username tu_usuario --password tu_contraseña
-   ```
+### Añadir más usuarios
 
-4. Abre `http://<host>:8080` (o el `APP_PORT` que hayas configurado) e inicia sesión.
+Desde el panel **Administración** (botón arriba a la izquierda en la página principal, visible solo para administradores) puedes crear más cuentas, ascenderlas/degradarlas entre `user` y `admin`, o borrarlas. Un admin no puede cambiar su propio rol ni borrar su propia cuenta (para no quedarte sin acceso por error); hazlo desde otra cuenta admin.
+
+También puedes crear usuarios por línea de comandos si lo prefieres:
+
+```bash
+docker compose exec app node dist/scripts/create-user.js -- --username otro_usuario --password su_contraseña --role user
+```
 
 ### Actualizar la aplicación
 

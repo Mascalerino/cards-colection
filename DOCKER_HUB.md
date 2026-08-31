@@ -13,7 +13,8 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
 - **Pokémon** — set listing with collection progress.
 - **Naruto** — per-series/rarity checklist, with PDF export (full list and missing cards).
 - **One Piece** — sets and starter decks via optcgapi.com, with market prices.
-- **Username/password login** — session via an httpOnly JWT cookie (no public sign-up: accounts are created from the CLI).
+- **Username/password login** — session via an httpOnly JWT cookie (no public sign-up: accounts are created by an admin).
+- **Roles** — `admin` accounts get an in-app panel to create, promote/demote and delete other users; `user` accounts only manage their own collection.
 - **Database-backed collections** — everything lives in Postgres, so your collection follows you across devices/browsers.
 - **Import/Export** — back up and restore every collection as a single JSON file.
 
@@ -42,10 +43,13 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
    JWT_EXPIRES_IN=30d
    CORS_ORIGIN=http://localhost:8080
    APP_PORT=8080
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=change-this-password-too
    ```
 
    - `CORS_ORIGIN` must match the URL you'll actually use to open the app (e.g. `http://192.168.1.50:8080` if you're running this on a home server/NAS).
    - `APP_PORT` is the port exposed on the host.
+   - `ADMIN_USERNAME`/`ADMIN_PASSWORD` create your first account automatically the first time the app starts (see below) — there is no public registration.
 
 3. Start the stack:
 
@@ -53,27 +57,31 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
    docker compose up -d
    ```
 
-   This pulls and starts two containers: `db` (Postgres) and `app` (this image — frontend + backend together). Database migrations run automatically when the app starts.
+   This pulls and starts two containers: `db` (Postgres) and `app` (this image — frontend + backend together). Database migrations run automatically when the app starts, and so does your admin account.
 
-4. Create your user account — there is no public registration, by design:
-
-   ```bash
-   docker compose exec app node dist/scripts/create-user.js -- --username youruser --password yourpassword
-   ```
-
-5. Open `http://<your-server>:8080` and log in.
+4. Open `http://<your-server>:8080` and log in with `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
 
 ## Passwords & secrets — where each one goes
 
-There are **two different passwords**, set in two different places:
+There are **three different passwords/secrets**, set in two different places:
 
-| What | Where | Command / variable |
+| What | Where | Variable / command |
 |---|---|---|
 | Database password | `.env` file, before starting the stack | `DB_PASSWORD=...` |
 | JWT signing secret | `.env` file, before starting the stack | `JWT_SECRET=...` |
-| Your login password (to sign in to the app) | Set *after* the stack is running, via the `create-user` script | `docker compose exec app node dist/scripts/create-user.js -- --username <user> --password <password>` |
+| Your admin login (first account) | `.env` file, before starting the stack — created automatically on first boot | `ADMIN_USERNAME=...` / `ADMIN_PASSWORD=...` |
 
-There is no environment variable for the login password and no public sign-up form — it is only ever set through that `create-user` command's `--password` flag, run once per account you want to create.
+`ADMIN_USERNAME`/`ADMIN_PASSWORD` only create the account **once**: if a user with that username already exists, the app leaves it untouched (so it's safe to keep those variables in `.env` across restarts/updates — they won't reset the password later). There is no public sign-up form.
+
+## Adding more users (admin panel)
+
+Once logged in as an admin, open the **Administration** panel (top-left button on the main page). From there an admin can:
+
+- Create new accounts (as `user` or `admin`), with a username and password.
+- Promote a `user` to `admin` or demote an `admin` back to `user`.
+- Delete accounts.
+
+`user` accounts only see and manage their own collection; `admin` accounts additionally get access to this panel. An admin can't change their own role or delete their own account (to avoid accidentally locking yourself out) — do that from another admin account.
 
 ## Updating
 

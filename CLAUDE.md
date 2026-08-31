@@ -53,12 +53,13 @@ Ver `README-ES.md` para el detalle de despliegue (pensado para TrueNAS).
 
 ### Rutas y páginas
 
-Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la sesión contra `GET /api/auth/me`).
+Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la sesión contra `GET /api/auth/me`). `/admin` además exige `adminGuard` (comprueba `role === 'admin'` sobre el usuario ya cargado por `authGuard`).
 
 | Ruta | Componente | Datos |
 |---|---|---|
 | `/login` | `LoginComponent` | — |
 | `/` | `CardCollectionComponent` | Menú principal + export/import |
+| `/admin` | `AdminComponent` | Gestión de usuarios vía `GET/POST /api/admin/users`, `PATCH /api/admin/users/:id/role`, `DELETE /api/admin/users/:id` (solo admins) |
 | `/magic` | `MagicCollectionsComponent` | Sets vía `GET /api/magic/sets` |
 | `/magic/:setId` | `MagicSetDetailComponent` | Cartas vía `GET /api/magic/sets/:setId/cards` |
 | `/pokemon` | `PokemonCollectionsComponent` | Sets vía `GET /api/pokemon/sets` |
@@ -69,7 +70,8 @@ Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la s
 
 ### Servicios
 
-- **`AuthService`**: login/logout/me. El JWT viaja en una cookie httpOnly (nunca en localStorage ni en memoria expuesta a JS).
+- **`AuthService`**: login/logout/me, expone `currentUser` (incluye `role`) y el computed `isAdmin`. El JWT viaja en una cookie httpOnly (nunca en localStorage ni en memoria expuesta a JS).
+- **`UsersApiService`**: CRUD de usuarios contra `/api/admin/users`, usado solo por `AdminComponent`.
 - **`CollectionApiService`**: cliente genérico del catálogo (`sets`, `sets/:id/cards`) y de la colección del usuario (`collection/:setId`) para cualquier juego. Todos los `cardId` que expone son el **externalId** de la carta (id de Scryfall, `card_set_id` de One Piece, código `SERIE-RAREZA-NUM` de Naruto), nunca un uuid interno.
 - **`SalesApiService`**: ventas de Magic.
 - **`DataTransferApiService`**: `GET /api/export` / `POST /api/import`, mismo formato JSON que el histórico basado en localStorage.
@@ -129,9 +131,14 @@ Peculiaridades de las APIs externas que hay que recordar:
 
 `GET/PUT/DELETE /api/:game/collection/:setId[/:cardId]`. El `cardId` de la URL y de las respuestas es siempre el **externalId** de la carta (el backend traduce a/desde el uuid interno). `PUT` hace upsert por combinación de `variant`+`language`+`condition`; `quantity <= 0` borra la entrada.
 
-### Auth
+### Auth y roles
 
-JWT en cookie httpOnly (`cc_token`, 30 días), sin registro público — los usuarios se crean con `npm run create-user`. Middleware `requireAuth` protege todo `/api/*` salvo `/api/auth/login`.
+JWT en cookie httpOnly (`cc_token`, 30 días), sin registro público. Cada usuario tiene `role` (`admin` | `user`, columna en `users`, incluido en el payload del JWT). Middleware `requireAuth` protege todo `/api/*` salvo `/api/auth/login`; `requireAdmin` (siempre después de `requireAuth`) protege `/api/admin/users` (`modules/users`: listar/crear/cambiar rol/borrar usuarios — un admin no puede tocar su propio rol ni borrarse a sí mismo).
+
+Formas de crear usuarios:
+- `npm run create-user -- --username <u> --password <p> [--role admin|user]` (CLI, rol `user` por defecto).
+- Variables de entorno `ADMIN_USERNAME`/`ADMIN_PASSWORD`: si están definidas, `ensureBootstrapAdmin()` (`modules/auth/auth.service.ts`, llamado desde `index.ts` antes de `app.listen`) crea ese usuario como admin la primera vez que arranca el proceso, sin tocar la contraseña si ya existe. Pensado para el primer admin en Docker sin tener que ejecutar el script a mano.
+- Desde el panel de administración del frontend (`/admin`, solo visible/accesible para `role = 'admin'`), que llama a `/api/admin/users`.
 
 ### Modelos de datos
 

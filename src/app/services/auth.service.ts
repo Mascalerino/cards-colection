@@ -1,11 +1,14 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '@environments/environment';
 
+export type UserRole = 'admin' | 'user';
+
 export interface AuthUser {
   id: string;
   username: string;
+  role: UserRole;
 }
 
 @Injectable({
@@ -16,6 +19,8 @@ export class AuthService {
 
   /** Usuario autenticado actual, o null. Se rellena tras login()/me(). */
   readonly currentUser = signal<AuthUser | null>(null);
+
+  readonly isAdmin = computed(() => this.currentUser()?.role === 'admin');
 
   constructor(private http: HttpClient) {}
 

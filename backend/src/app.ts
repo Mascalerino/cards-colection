@@ -3,13 +3,14 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'node:path';
 import { env } from './config/env.js';
-import { requireAuth } from './middleware/auth.middleware.js';
+import { requireAdmin, requireAuth } from './middleware/auth.middleware.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { cardsRouter } from './modules/cards/cards.routes.js';
 import { collectionRouter } from './modules/collection/collection.routes.js';
 import { salesRouter } from './modules/sales/sales.routes.js';
 import { dataTransferRouter } from './modules/data-transfer/data-transfer.routes.js';
+import { usersRouter } from './modules/users/users.routes.js';
 
 export const app = express();
 
@@ -25,6 +26,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/:game/sets', requireAuth, cardsRouter);
 app.use('/api/:game/collection', requireAuth, collectionRouter);
 app.use('/api/magic/sales', requireAuth, salesRouter);
+// Panel de administración: solo para usuarios con role = 'admin'.
+app.use('/api/admin/users', requireAuth, requireAdmin, usersRouter);
 app.use('/api', requireAuth, dataTransferRouter);
 app.use('/api', notFoundHandler);
 
