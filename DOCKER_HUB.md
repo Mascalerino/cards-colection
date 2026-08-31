@@ -61,6 +61,27 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
 
 4. Open `http://<your-server>:8080` and log in with `ADMIN_USERNAME`/`ADMIN_PASSWORD`.
 
+## Building the image yourself
+
+If you'd rather build from source than pull the pre-built image, clone the repo and build with the included `Dockerfile` — it's a multi-stage build that compiles the Angular frontend and the Express/TypeScript backend and packages them together, so there's nothing else to install:
+
+```bash
+git clone https://github.com/Mascalerino/cards-colection.git
+cd cards-colection
+docker build -t cards-collection:latest .
+```
+
+The build needs no arguments and no external services — it only touches the network to run `npm install` for the frontend and backend. It produces the exact same image published here as `tallon43/cards-collection`.
+
+To run it, use the repo's own `docker-compose.yml` (it builds instead of pulling):
+
+```bash
+cp .env.example .env   # then edit DB_PASSWORD, JWT_SECRET, ADMIN_USERNAME/ADMIN_PASSWORD, etc.
+docker compose up -d --build
+```
+
+That's the same `db` + `app` stack described above, just built locally instead of pulled from Docker Hub. Rebuild and restart after pulling new commits with `docker compose up -d --build` again.
+
 ## Passwords & secrets — where each one goes
 
 There are **three different passwords/secrets**, set in two different places:
