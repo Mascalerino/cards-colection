@@ -63,6 +63,18 @@ This single image bundles the Angular frontend and the Express/TypeScript backen
 
 5. Open `http://<your-server>:8080` and log in.
 
+## Passwords & secrets — where each one goes
+
+There are **two different passwords**, set in two different places:
+
+| What | Where | Command / variable |
+|---|---|---|
+| Database password | `.env` file, before starting the stack | `DB_PASSWORD=...` |
+| JWT signing secret | `.env` file, before starting the stack | `JWT_SECRET=...` |
+| Your login password (to sign in to the app) | Set *after* the stack is running, via the `create-user` script | `docker compose exec app node dist/scripts/create-user.js -- --username <user> --password <password>` |
+
+There is no environment variable for the login password and no public sign-up form — it is only ever set through that `create-user` command's `--password` flag, run once per account you want to create.
+
 ## Updating
 
 ```bash
