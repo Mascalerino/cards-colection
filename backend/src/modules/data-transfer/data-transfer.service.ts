@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { db } from '../../config/db.js';
 import { cardSales, cardSets, cards, userCollectionEntries, type Game } from '../../db/schema.js';
-import { getSetCards } from '../cards/cards.service.js';
+import { getSetCards, getSets } from '../cards/cards.service.js';
 import { upsertCollectionEntry } from '../collection/collection.service.js';
 
 // Mismas claves/formatos que exportCollections()/importCollections() en el frontend
@@ -204,6 +204,7 @@ export async function importUserData(
 
 async function importMagicCollection(userId: string, setId: string, data: CardCollectionEntryDto[]) {
   if (!Array.isArray(data) || data.length === 0) return;
+  await getSets('magic'); // asegura que la lista de sets está sembrada (si no, el set de abajo no existe todavía)
   await getSetCards('magic', setId); // asegura que el catálogo (y precios) existe
 
   for (const entry of data) {
@@ -221,6 +222,7 @@ async function importMagicCollection(userId: string, setId: string, data: CardCo
 
 async function importNarutoCollection(userId: string, setId: string, data: Record<string, boolean>) {
   if (!data || typeof data !== 'object') return;
+  await getSets('naruto');
   await getSetCards('naruto', setId);
 
   for (const [cardCode, owned] of Object.entries(data)) {
@@ -236,6 +238,7 @@ async function importNarutoCollection(userId: string, setId: string, data: Recor
 
 async function importOnePieceCollection(userId: string, setId: string, data: OnePieceCardEntryDto[]) {
   if (!Array.isArray(data) || data.length === 0) return;
+  await getSets('onepiece');
   await getSetCards('onepiece', setId);
 
   for (const entry of data) {
@@ -250,6 +253,7 @@ async function importOnePieceCollection(userId: string, setId: string, data: One
 
 async function importSales(userId: string, setId: string, data: CardSaleDto[]) {
   if (!Array.isArray(data) || data.length === 0) return;
+  await getSets('magic');
 
   const [set] = await db
     .select()
