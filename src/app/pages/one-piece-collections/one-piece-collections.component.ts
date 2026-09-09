@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { OnePieceService } from '../../services/one-piece.service';
 import { CollectionApiService } from '../../services/collection-api.service';
 import { OnePieceSet, OnePieceDeck, OnePieceCard } from '@models/one-piece-card.model';
@@ -11,7 +12,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-one-piece-collections',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatTabsModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatTabsModule, MatTooltipModule],
   templateUrl: './one-piece-collections.component.html',
   changeDetection: ChangeDetectionStrategy.Default,
   styleUrl: './one-piece-collections.component.scss',
@@ -89,6 +90,10 @@ export class OnePieceCollectionsComponent implements OnInit {
   getProgress(item: OnePieceSet | OnePieceDeck): number {
     if (!item.totalCards || item.totalCards === 0) return 0;
     return (item.ownedCards / item.totalCards) * 100;
+  }
+
+  cardmarketUrl(name: string): string {
+    return `https://www.cardmarket.com/en/OnePiece/Products/Search?searchString=${encodeURIComponent(name)}`;
   }
 
   private calculateValue(id: string, item: OnePieceSet | OnePieceDeck, cards: OnePieceCard[]): void {

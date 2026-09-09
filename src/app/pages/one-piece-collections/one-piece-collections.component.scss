@@ -113,7 +113,14 @@
       }
 
       .set-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+
         .set-text {
+          flex: 1;
+
           h3 {
             color: #1d1d1f;
             margin: 0 0 1rem 0;
@@ -156,6 +163,31 @@
               }
             }
           }
+        }
+      }
+
+      .cardmarket-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+
+        &:hover {
+          background: #e0e0e2;
+          transform: scale(1.1);
+        }
+
+        mat-icon {
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
         }
       }
     }

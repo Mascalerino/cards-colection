@@ -36,6 +36,15 @@
                     </div>
                   </div>
                 </div>
+                <a
+                  [href]="cardmarketUrl(set.set_name)"
+                  target="_blank"
+                  class="cardmarket-link"
+                  matTooltip="Ver en cardmarket"
+                  (click)="$event.stopPropagation()"
+                  >
+                  <mat-icon>style</mat-icon>
+                </a>
               </div>
             </div>
           }
@@ -61,6 +70,15 @@
                     </div>
                   </div>
                 </div>
+                <a
+                  [href]="cardmarketUrl(deck.deck_name)"
+                  target="_blank"
+                  class="cardmarket-link"
+                  matTooltip="Ver en cardmarket"
+                  (click)="$event.stopPropagation()"
+                  >
+                  <mat-icon>style</mat-icon>
+                </a>
               </div>
             </div>
           }
