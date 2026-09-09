@@ -19,14 +19,6 @@ export interface RawMagicSet {
   cardMarketExpansionId: number;
 }
 
-export interface RawPokemonSet {
-  id: string;
-  name: string;
-  cardmarketUrl: string;
-  totalCards?: number;
-  ownedCards: number;
-}
-
 export interface NarutoRarity {
   code: string;
   start: number;
@@ -42,10 +34,6 @@ export interface RawNarutoSeries {
 
 export function loadMagicSets(): RawMagicSet[] {
   return readJson<RawMagicSet[]>('magic-sets.json');
-}
-
-export function loadPokemonSets(): RawPokemonSet[] {
-  return readJson<RawPokemonSet[]>('pokemon-sets.json');
 }
 
 export function loadNarutoSeries(): RawNarutoSeries[] {

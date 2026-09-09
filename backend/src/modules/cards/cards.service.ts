@@ -6,7 +6,6 @@ import {
   generateNarutoCards,
   loadMagicSets,
   loadNarutoSeries,
-  loadPokemonSets,
 } from './providers/local-json.provider.js';
 import { fetchMagicSetCards } from './providers/scryfall.provider.js';
 import {
@@ -22,7 +21,7 @@ function isOnePieceDeck(set: typeof cardSets.$inferSelect): boolean {
 
 const PRICE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días, igual que la caché actual del frontend
 
-const GAMES: Game[] = ['magic', 'pokemon', 'naruto', 'onepiece'];
+const GAMES: Game[] = ['magic', 'naruto', 'onepiece'];
 
 function assertGame(game: string): asserts game is Game {
   if (!GAMES.includes(game as Game)) {
@@ -52,14 +51,6 @@ async function seedSets(game: Game) {
       name: set.name,
       totalCards: null,
       extra: { setCode: set.setCode, cardmarketUrl: set.cardmarketUrl, cardMarketExpansionId: set.cardMarketExpansionId },
-    }));
-  } else if (game === 'pokemon') {
-    rows = loadPokemonSets().map((set) => ({
-      game,
-      externalId: set.id,
-      name: set.name,
-      totalCards: set.totalCards ?? null,
-      extra: { cardmarketUrl: set.cardmarketUrl },
     }));
   } else if (game === 'naruto') {
     rows = loadNarutoSeries().map((series) => ({
@@ -182,7 +173,6 @@ async function seedCards(game: Game, set: typeof cardSets.$inferSelect) {
       }));
     }
   }
-  // pokemon: sin catálogo de cartas individuales de momento (solo checklist de set)
 
   if (rows.length === 0) return [];
 

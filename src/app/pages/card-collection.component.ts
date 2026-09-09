@@ -32,10 +32,6 @@ export class CardCollectionComponent {
     this.router.navigate(['/magic']);
   }
 
-  navigateToPokemon() {
-    this.router.navigate(['/pokemon']);
-  }
-
   navigateToNaruto() {
     this.router.navigate(['/naruto']);
   }

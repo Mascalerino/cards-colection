@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@environments/environment';
 
-export type Game = 'magic' | 'pokemon' | 'naruto' | 'onepiece';
+export type Game = 'magic' | 'naruto' | 'onepiece';
 
 export interface BackendCardSet {
   id: string;

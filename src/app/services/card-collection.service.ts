@@ -11,10 +11,6 @@ interface MagicSetExtra {
   cardMarketExpansionId: number;
 }
 
-interface PokemonSetExtra {
-  cardmarketUrl: string;
-}
-
 interface MagicCardData {
   collectorNumber: string;
   setName?: string;
@@ -26,7 +22,7 @@ interface MagicCardData {
 }
 
 function toCardSet(set: BackendCardSet): CardSet {
-  const extra = (set.extra ?? {}) as Partial<MagicSetExtra & PokemonSetExtra>;
+  const extra = (set.extra ?? {}) as Partial<MagicSetExtra>;
   return {
     id: set.externalId,
     name: set.name,
@@ -71,10 +67,6 @@ export class CardCollectionService {
 
   getMagicSetById(setId: string): Observable<CardSet | undefined> {
     return this.getMagicSets().pipe(map((sets) => sets.find((set) => set.id === setId)));
-  }
-
-  getPokemonSets(): Observable<CardSet[]> {
-    return this.collectionApi.getSets('pokemon').pipe(map((sets) => sets.map(toCardSet)));
   }
 
   /** setId: id interno del set (p.ej. "final-fantasy"), no el setCode de Scryfall. */

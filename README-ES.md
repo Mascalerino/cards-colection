@@ -1,11 +1,10 @@
 # Cards Collection
 
-Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gathering, Pokémon, Naruto y One Piece), con backend propio, base de datos y login de usuario — pensada para autoalojarse (p. ej. en un NAS con Docker).
+Aplicación para gestionar colecciones de cartas coleccionables (Magic: The Gathering, Naruto y One Piece), con backend propio, base de datos y login de usuario — pensada para autoalojarse (p. ej. en un NAS con Docker).
 
 ## 🚀 Características
 
 - **Magic: The Gathering**: gestión completa de colecciones con integración a Scryfall API (precios, imágenes, foil/nonfoil), exportación de duplicados a CSV compatible con Cardmarket y registro de ventas.
-- **Pokémon**: listado de sets y progreso.
 - **Naruto**: checklist de cartas por serie/rareza, con exportación a PDF (listado completo y cartas faltantes).
 - **One Piece**: sets y starter decks vía optcgapi.com, con precios de mercado.
 - **Login con usuario y contraseña**: sesión con JWT en cookie httpOnly.
@@ -143,7 +142,7 @@ npm test
 │   │   ├── interceptors/       # credentialsInterceptor
 │   │   ├── models/              # Modelos de datos
 │   │   ├── services/            # AuthService, CollectionApiService, SalesApiService...
-│   │   └── pages/                # Páginas (magic, pokemon, naruto, onepiece, login...)
+│   │   └── pages/                # Páginas (magic, naruto, onepiece, login...)
 │   └── environments/
 ├── backend/                  # Backend (Express + TypeScript + Drizzle ORM)
 │   └── src/
@@ -164,7 +163,6 @@ npm test
 - `/login` — inicio de sesión
 - `/` — página principal con selector de juego + export/import
 - `/magic`, `/magic/:setId`
-- `/pokemon`
 - `/naruto`, `/naruto/:seriesId`
 - `/onepiece`, `/onepiece/:setId`
 

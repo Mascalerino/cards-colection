@@ -62,7 +62,6 @@ Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la s
 | `/admin` | `AdminComponent` | Gestión de usuarios vía `GET/POST /api/admin/users`, `PATCH /api/admin/users/:id/role`, `DELETE /api/admin/users/:id` (solo admins) |
 | `/magic` | `MagicCollectionsComponent` | Sets vía `GET /api/magic/sets` |
 | `/magic/:setId` | `MagicSetDetailComponent` | Cartas vía `GET /api/magic/sets/:setId/cards` |
-| `/pokemon` | `PokemonCollectionsComponent` | Sets vía `GET /api/pokemon/sets` |
 | `/naruto` | `NarutoCollectionsComponent` | Series vía `GET /api/naruto/sets` |
 | `/naruto/:seriesId` | `NarutoSetDetailComponent` | Checklist generado a partir de `extra.rarities` |
 | `/onepiece` | `OnePieceCollectionsComponent` | Sets y decks vía `GET /api/onepiece/sets` |
@@ -75,7 +74,7 @@ Todas las rutas salvo `/login` están protegidas por `authGuard` (comprueba la s
 - **`CollectionApiService`**: cliente genérico del catálogo (`sets`, `sets/:id/cards`) y de la colección del usuario (`collection/:setId`) para cualquier juego. Todos los `cardId` que expone son el **externalId** de la carta (id de Scryfall, `card_set_id` de One Piece, código `SERIE-RAREZA-NUM` de Naruto), nunca un uuid interno.
 - **`SalesApiService`**: ventas de Magic.
 - **`DataTransferApiService`**: `GET /api/export` / `POST /api/import`, mismo formato JSON que el histórico basado en localStorage.
-- **`CardCollectionService`**: mapea las respuestas del backend a los modelos `CardSet`/`Card` del frontend para Magic y Pokémon.
+- **`CardCollectionService`**: mapea las respuestas del backend a los modelos `CardSet`/`Card` del frontend para Magic.
 - **`OnePieceService`**: igual que el anterior pero para One Piece (incluye distinguir sets de decks vía `extra.kind`).
 
 Interceptor `credentialsInterceptor`: añade `withCredentials` a toda petición a `environment.apiUrl` y redirige a `/login` en un 401.
@@ -118,13 +117,12 @@ backend/src/
 
 ### Catálogo de cartas (`modules/cards`)
 
-`GET /api/:game/sets` y `GET /api/:game/sets/:setId/cards` siembran la BD la primera vez que se piden (desde JSON local para Pokémon/Naruto, o desde Scryfall/optcgapi para Magic/One Piece) y cachean precios con **TTL de 7 días** en `cards.pricesFetchedAt`. Los providers son intercambiables por juego; añadir un juego nuevo implica un provider nuevo y sus ramas en `cards.service.ts`.
+`GET /api/:game/sets` y `GET /api/:game/sets/:setId/cards` siembran la BD la primera vez que se piden (desde JSON local para Naruto, o desde Scryfall/optcgapi para Magic/One Piece) y cachean precios con **TTL de 7 días** en `cards.pricesFetchedAt`. Los providers son intercambiables por juego; añadir un juego nuevo implica un provider nuevo y sus ramas en `cards.service.ts`.
 
 Peculiaridades de las APIs externas que hay que recordar:
 - Scryfall exige un `User-Agent` personalizado (si no, 400 `generic_user_agent`).
 - optcgapi: `allDecks` devuelve `structure_deck_id`/`structure_deck_name` (no `deck_id`/`deck_name`), y `decks/filtered/` exige pasar **tanto** `deck_id` como `set_id` (con el mismo valor) o responde 400.
 - Naruto no tiene catálogo externo: las cartas se generan a partir de los rangos `rarities` de `src/data/naruto-sets.json`, con el mismo formato de código que antes generaba el frontend (`SERIE-RAREZA-NUM`, 3 dígitos).
-- Pokémon solo tiene listado de sets (sin catálogo de cartas individuales todavía).
 - One Piece distingue **sets** de **decks** con `card_sets.extra.kind` (`'set'` | `'deck'`); ambos viven en la misma tabla bajo `game = 'onepiece'`.
 
 ### Colección del usuario (`modules/collection`)
@@ -149,7 +147,7 @@ Formas de crear usuarios:
 
 ### Datos estáticos
 
-Los JSON de sets de Magic/Pokémon/Naruto viven **duplicados** en `src/assets/card-collection/` (legado, ya no se usan en runtime) y en `backend/src/data/` (fuente real usada para sembrar la BD). Para añadir o modificar un set hay que editar `backend/src/data/*.json`.
+Los JSON de sets de Magic/Naruto viven **duplicados** en `src/assets/card-collection/` (legado, ya no se usan en runtime) y en `backend/src/data/` (fuente real usada para sembrar la BD). Para añadir o modificar un set hay que editar `backend/src/data/*.json`.
 
 ## Docker
 

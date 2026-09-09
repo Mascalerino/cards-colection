@@ -39,14 +39,6 @@ export const routes: Routes = [
     ],
   },
   {
-    path: 'pokemon',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./pages/pokemon-collections/pokemon-collections.component').then(
-        (m) => m.PokemonCollectionsComponent
-      ),
-  },
-  {
     path: 'naruto',
     canActivate: [authGuard],
     children: [

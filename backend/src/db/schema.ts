@@ -9,8 +9,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-// 'magic' | 'pokemon' | 'naruto' | 'onepiece'
-export type Game = 'magic' | 'pokemon' | 'naruto' | 'onepiece';
+// 'magic' | 'naruto' | 'onepiece'
+export type Game = 'magic' | 'naruto' | 'onepiece';
 
 // 'admin' puede gestionar usuarios desde el panel de administración; 'user' es una cuenta normal.
 export type UserRole = 'admin' | 'user';
